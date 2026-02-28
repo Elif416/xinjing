@@ -1,0 +1,131 @@
+{
+  "hero": {
+    "title": "接力绘画小说",
+    "subtitle": "以 OC 角色为线索，和同好一起补全故事的情感脉络。",
+    "stories": [
+      {
+        "id": "story-neon",
+        "title": "霓虹航线",
+        "description": "漂浮城的守夜者追逐最后一束蓝光。",
+        "image": "/mock-dream.svg",
+        "progress": "第 12 棒",
+        "participants": 86,
+        "href": "/creation/relay/story-neon",
+        "status": "正在接力"
+      },
+      {
+        "id": "story-mountain",
+        "title": "山海回声",
+        "description": "古风世界的遗世回响在雪夜苏醒。",
+        "image": "/mock-map.svg",
+        "progress": "第 8 棒",
+        "participants": 54,
+        "href": "/creation/relay/story-mountain",
+        "status": "正在接力"
+      },
+      {
+        "id": "story-garden",
+        "title": "雾境花园",
+        "description": "玻璃温室里的植物记录人类情绪。",
+        "image": "/mock-soul.svg",
+        "progress": "第 5 棒",
+        "participants": 29,
+        "href": "/creation/relay/story-garden",
+        "status": "正在接力"
+      },
+      {
+        "id": "story-starport",
+        "title": "星港记忆",
+        "description": "在星际港口收集每一段离别的故事。",
+        "image": "/mock-merch.svg",
+        "progress": "第 9 棒",
+        "participants": 61,
+        "href": "/creation/relay/story-starport",
+        "status": "正在接力"
+      }
+    ]
+  },
+  "filters": {
+    "styles": [
+      "赛博",
+      "古风",
+      "二次元",
+      "治愈",
+      "极简"
+    ],
+    "schedules": [
+      "档期充足",
+      "两周内",
+      "排队中"
+    ],
+    "price": {
+      "min": 100,
+      "max": 800,
+      "step": 50,
+      "default": 320
+    }
+  },
+  "artists": [
+    {
+      "id": "artist-chen",
+      "name": "澄川",
+      "specialty": "赛博 / 概念场景",
+      "price": "￥260+",
+      "image": "/mock-dream.svg",
+      "avatar": "C",
+      "note": "擅长蓝色霓虹与城市孤独叙事。",
+      "href": "/creation/artist/artist-chen"
+    },
+    {
+      "id": "artist-yu",
+      "name": "羽织",
+      "specialty": "古风 / 人物设定",
+      "price": "￥220+",
+      "image": "/mock-map.svg",
+      "avatar": "羽",
+      "note": "柔和笔触刻画东方情绪。",
+      "href": "/creation/artist/artist-yu"
+    },
+    {
+      "id": "artist-sen",
+      "name": "森屿",
+      "specialty": "治愈 / 插画",
+      "price": "￥180+",
+      "image": "/mock-soul.svg",
+      "avatar": "森",
+      "note": "擅长温柔色块与光影。",
+      "href": "/creation/artist/artist-sen"
+    },
+    {
+      "id": "artist-lu",
+      "name": "陆行",
+      "specialty": "二次元 / 角色立绘",
+      "price": "￥240+",
+      "image": "/mock-merch.svg",
+      "avatar": "陆",
+      "note": "高饱和度角色刻画。",
+      "href": "/creation/artist/artist-lu"
+    },
+    {
+      "id": "artist-yan",
+      "name": "言澈",
+      "specialty": "极简 / 抽象情绪",
+      "price": "￥200+",
+      "image": "/mock-ecosystem.svg",
+      "avatar": "言",
+      "note": "以极简线条表现情感张力。",
+      "href": "/creation/artist/artist-yan"
+    },
+    {
+      "id": "artist-ning",
+      "name": "宁白",
+      "specialty": "概念 / UI 视觉",
+      "price": "￥280+",
+      "image": "/mock-map.svg",
+      "avatar": "宁",
+      "note": "擅长玻璃质感与空间叙事。",
+      "href": "/creation/artist/artist-ning"
+    }
+  ],
+  "emptyState": "暂无匹配画师，换个关键词试试？"
+}

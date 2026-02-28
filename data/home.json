@@ -1,0 +1,96 @@
+{
+  "brand": {
+    "name": "心镜",
+    "en": "HeartMirror",
+    "tagline": "Creation · Activation · Resonance"
+  },
+  "nav": [
+    {
+      "label": "灵感创造",
+      "href": "#creation"
+    },
+    {
+      "label": "灵魂活化",
+      "href": "/activation"
+    },
+    {
+      "label": "时空共鸣",
+      "href": "#resonance"
+    },
+    {
+      "label": "实体工坊",
+      "href": "#workshop"
+    }
+  ],
+  "hero": {
+    "title": "心镜：数字情感记忆共创平台",
+    "subtitle": "从个性化创造，到智能体活化，再到跨越时空的共鸣。让每一份细腻的情感都被看见、被珍藏、被连接。",
+    "primaryCta": "开启心境",
+    "secondaryCta": "探索闭环"
+  },
+  "bento": {
+    "title": "让情感触手可及",
+    "items": [
+      {
+        "id": "palette",
+        "title": "情绪配色器",
+        "description": "一键将抽象情绪转化为可感知的数字艺术品。",
+        "size": "large"
+      },
+      {
+        "id": "symphony",
+        "title": "人生交响曲",
+        "description": "你的专属情感律动生成器。",
+        "size": "small"
+      }
+    ]
+  },
+  "creation": {
+    "id": "creation",
+    "title": "【创造】数字艺术定制",
+    "description": "将自我投射与理想场景转化为独特画作，打造可被珍藏的情感资产。",
+    "image": "/mock-dream.svg",
+    "align": "left",
+    "tag": "接力绘画小说",
+    "href": "/creation"
+  },
+  "activation": {
+    "id": "activation",
+    "title": "【活化】AI 情感引擎",
+    "description": "深度整合图像、语音与 NLP，基于你的碎片化记忆数据，唤醒专属的成长性陪伴。",
+    "image": "/mock-soul.svg",
+    "align": "right",
+    "addon": {
+      "title": "接力绘画小说",
+      "description": "基于海量 OC 角色，发起主题共创，让内容自生长。"
+    },
+    "href": "/activation"
+  },
+  "resonance": {
+    "id": "resonance",
+    "title": "【共鸣】集体记忆地图",
+    "description": "结合 UGC 与地理坐标，构建沉浸式数字家园，形成跨时空的温暖共鸣。",
+    "image": "/mock-map.svg",
+    "align": "left"
+  },
+  "commerce": {
+    "id": "workshop",
+    "items": [
+      {
+        "title": "可印刷的情感密码",
+        "description": "将数字情感延伸至实体纪念品，打通线上线下体验。",
+        "image": "/mock-merch.svg",
+        "href": "/workshop"
+      },
+      {
+        "title": "情感版权集市 & 企业定制",
+        "description": "为创作者与品牌提供可持续的情感资产共创与授权合作空间。",
+        "image": "/mock-ecosystem.svg",
+        "href": "/market"
+      }
+    ]
+  },
+  "footer": {
+    "copyright": "© 2026 心镜 HeartMirror. All rights reserved."
+  }
+}

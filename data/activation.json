@@ -1,0 +1,61 @@
+{
+    "entity":  {
+                   "title":  "等待唤醒",
+                   "image":  "/mock-soul.svg",
+                   "description":  "在注入记忆之前，数字生命处于静默状态。"
+               },
+    "personality":  {
+                        "title":  "人格特征配置",
+                        "fields":  {
+                                       "name":  "名字",
+                                       "traits":  "性格关键词"
+                                   },
+                        "sliders":  [
+                                        {
+                                            "id":  "emotion",
+                                            "label":  "感性程度",
+                                            "value":  62
+                                        },
+                                        {
+                                            "id":  "logic",
+                                            "label":  "逻辑性",
+                                            "value":  48
+                                        },
+                                        {
+                                            "id":  "humor",
+                                            "label":  "幽默感",
+                                            "value":  58
+                                        }
+                                    ]
+                    },
+    "memory":  {
+                   "title":  "注入记忆碎片以驱动灵魂",
+                   "items":  [
+                                 {
+                                     "id":  "memory-photo",
+                                     "type":  "photo",
+                                     "title":  "模糊的老照片",
+                                     "description":  "一段被时间抹去的笑容。",
+                                     "image":  "/mock-dream.svg"
+                                 },
+                                 {
+                                     "id":  "memory-diary",
+                                     "type":  "diary",
+                                     "title":  "文字日记",
+                                     "description":  "“那天的光像从心底漫出来。”",
+                                     "image":  "/mock-map.svg"
+                                 },
+                                 {
+                                     "id":  "memory-audio",
+                                     "type":  "audio",
+                                     "title":  "音频波形",
+                                     "description":  "记录一段未说出口的问候。",
+                                     "image":  "/mock-soul.svg"
+                                 }
+                             ]
+               },
+    "trigger":  {
+                    "progressLabel":  "共鸣程度",
+                    "buttonLabel":  "唤醒灵魂"
+                }
+}

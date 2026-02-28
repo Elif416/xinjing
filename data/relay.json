@@ -1,0 +1,152 @@
+{
+  "stories": [
+    {
+      "id": "story-neon",
+      "title": "主题：破碎星辰的余温",
+      "progress": "第 12 棒",
+      "participants": 86,
+      "summary": "星际巡航队在宇宙裂隙里寻找最后一束蓝光，记忆与未来在这里交汇。",
+      "oc": {
+        "name": "夜航",
+        "role": "漂浮城守夜者",
+        "tags": ["霓虹", "孤旅", "星港"],
+        "description": "在永夜的港口记录光谱的人，负责守护失落的信号。",
+        "image": "/mock-soul.svg"
+      },
+      "nodes": [
+        {
+          "id": "node-01",
+          "title": "序章：裂隙里的回声",
+          "author": "澄川",
+          "content": "夜航在碎裂的星云里听见昔日的求救频率，于是决定重新点亮航标。",
+          "image": "/mock-dream.svg"
+        },
+        {
+          "id": "node-02",
+          "title": "第二棒：蓝光信标",
+          "author": "羽织",
+          "content": "信标启动，漂浮城的人们第一次看见星空有了温度，愿意分享旧日记忆。",
+          "image": "/mock-map.svg"
+        },
+        {
+          "id": "node-03",
+          "title": "第三棒：记忆的庭院",
+          "author": "森屿",
+          "content": "队伍在玻璃温室里重建情感地图，让每一次遗憾都成为星光。",
+          "image": "/mock-merch.svg"
+        },
+        {
+          "id": "node-04",
+          "title": "第四棒：归航的誓言",
+          "author": "宁白",
+          "content": "夜航决定带领新一代守夜者驶向裂隙深处，寻找更多未被记住的人。",
+          "image": "/mock-ecosystem.svg"
+        }
+      ]
+    },
+    {
+      "id": "story-mountain",
+      "title": "主题：山海回声",
+      "progress": "第 8 棒",
+      "participants": 54,
+      "summary": "古风世界的旅人收集失落的音节，修复人与山海的情感联结。",
+      "oc": {
+        "name": "澜珂",
+        "role": "回声行者",
+        "tags": ["山海", "古风", "守望"],
+        "description": "在山海裂谷中唤醒回声的人，寻找被遗忘的誓言。",
+        "image": "/mock-map.svg"
+      },
+      "nodes": [
+        {
+          "id": "node-01",
+          "title": "序章：雪夜誓言",
+          "author": "言澈",
+          "content": "雪夜里，澜珂拾起一枚断裂的玉铃，听见远方的回声。",
+          "image": "/mock-soul.svg"
+        },
+        {
+          "id": "node-02",
+          "title": "第二棒：山海之路",
+          "author": "陆行",
+          "content": "沿着回声的方向，她与山海遗民重建古老的情感坐标。",
+          "image": "/mock-dream.svg"
+        },
+        {
+          "id": "node-03",
+          "title": "第三棒：归山之人",
+          "author": "羽织",
+          "content": "古老山道重现于眼前，回声在雪雾里指向失落的村落。",
+          "image": "/mock-merch.svg"
+        }
+      ]
+    },
+    {
+      "id": "story-garden",
+      "title": "主题：雾境花园的低语",
+      "progress": "第 5 棒",
+      "participants": 29,
+      "summary": "温室里被记忆滋养的植物，正在学习如何回应人类的情绪。",
+      "oc": {
+        "name": "苔语",
+        "role": "花园守望者",
+        "tags": ["雾境", "治愈", "植物"],
+        "description": "能够感知情绪的温室管理员，守护每一片叶子的记忆。",
+        "image": "/mock-merch.svg"
+      },
+      "nodes": [
+        {
+          "id": "node-01",
+          "title": "序章：玻璃温室",
+          "author": "森屿",
+          "content": "苔语在晨雾里听见植物轻声诉说，决定记录它们的情绪语言。",
+          "image": "/mock-soul.svg"
+        },
+        {
+          "id": "node-02",
+          "title": "第二棒：记忆浇灌",
+          "author": "宁白",
+          "content": "每一滴露水都承载着旧日的故事，温室因此渐渐有了心跳。",
+          "image": "/mock-map.svg"
+        }
+      ]
+    },
+    {
+      "id": "story-starport",
+      "title": "主题：星港记忆",
+      "progress": "第 9 棒",
+      "participants": 61,
+      "summary": "在星际港口收集离别的碎片，让每一段航程都被温柔记住。",
+      "oc": {
+        "name": "港灯",
+        "role": "星港记录官",
+        "tags": ["星港", "离别", "守望"],
+        "description": "记录星际旅客情感的档案官，为每一次启程点灯。",
+        "image": "/mock-ecosystem.svg"
+      },
+      "nodes": [
+        {
+          "id": "node-01",
+          "title": "序章：告别的频率",
+          "author": "澄川",
+          "content": "港灯在登船口记录心跳频率，把告别化为可见的光纹。",
+          "image": "/mock-dream.svg"
+        },
+        {
+          "id": "node-02",
+          "title": "第二棒：星际航班",
+          "author": "陆行",
+          "content": "旅客在起航前留下最后一段留言，星港因此变得温暖。",
+          "image": "/mock-merch.svg"
+        },
+        {
+          "id": "node-03",
+          "title": "第三棒：光纹回放",
+          "author": "言澈",
+          "content": "港灯把光纹回放投向夜空，让离别拥有新的意义。",
+          "image": "/mock-soul.svg"
+        }
+      ]
+    }
+  ]
+}

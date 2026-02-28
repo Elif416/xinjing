@@ -1,0 +1,479 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 全局基础：让 body 成为唯一滚动容器，避免双滚动条 */
+html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  @apply bg-mist text-ink font-sans;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  letter-spacing: 0.005em;
+}
+
+/* 全局弥散光背景：柔和径向渐变 + 轻微呼吸流动 */
+.page-bg {
+  position: relative;
+  isolation: isolate;
+  background: #f5f5f7;
+  min-height: 100%;
+}
+
+.page-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 40% at 20% 10%, rgba(120, 160, 255, 0.35), transparent 60%),
+    radial-gradient(50% 40% at 80% 20%, rgba(196, 168, 255, 0.28), transparent 60%),
+    radial-gradient(40% 35% at 45% 80%, rgba(255, 188, 214, 0.22), transparent 60%);
+  filter: blur(52px);
+  opacity: 0.75;
+  animation: glow-float 26s ease-in-out infinite;
+  transform: translateZ(0) scale(1.2);
+  will-change: transform;
+  z-index: 0;
+}
+
+.page-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 保留 fixed / sticky / absolute 的定位语义，避免被统一规则覆盖 */
+.page-bg > .fixed {
+  position: fixed;
+}
+
+.page-bg > .sticky {
+  position: sticky;
+}
+
+.page-bg > .absolute {
+  position: absolute;
+}
+
+@keyframes glow-float {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1.2);
+  }
+  50% {
+    transform: translate3d(2%, 1%, 0) scale(1.2);
+  }
+  100% {
+    transform: translate3d(-2%, -1%, 0) scale(1.2);
+  }
+}
+
+/* Creation 页面专属弥散光背景：蓝紫色调更明显 */
+.creation-bg::before {
+  background:
+    radial-gradient(60% 45% at 18% 18%, rgba(116, 154, 255, 0.4), transparent 60%),
+    radial-gradient(50% 40% at 82% 24%, rgba(186, 160, 255, 0.32), transparent 60%),
+    radial-gradient(45% 35% at 50% 82%, rgba(120, 200, 255, 0.2), transparent 60%);
+  opacity: 0.85;
+}
+
+/* Relay 详情页背景：深邃蓝色弥散光 + 轻微呼吸 */
+.relay-bg {
+  background: #060a17;
+}
+
+.relay-bg::before {
+  background:
+    radial-gradient(60% 45% at 20% 20%, rgba(64, 110, 255, 0.35), transparent 60%),
+    radial-gradient(50% 40% at 80% 18%, rgba(120, 90, 255, 0.28), transparent 60%),
+    radial-gradient(40% 35% at 50% 80%, rgba(40, 120, 255, 0.22), transparent 60%);
+  filter: blur(70px);
+  opacity: 0.75;
+  animation: relay-glow 28s ease-in-out infinite;
+  transform: translateZ(0) scale(1.15);
+}
+
+@keyframes relay-glow {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1.15);
+  }
+  50% {
+    transform: translate3d(1.5%, 1%, 0) scale(1.15);
+  }
+  100% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1.15);
+  }
+}
+
+/* Artist 详情页背景：浅蓝呼吸渐变，保持玻璃体系一致 */
+.artist-bg {
+  background: #f5f7ff;
+}
+
+.artist-bg::before {
+  background:
+    radial-gradient(55% 45% at 18% 18%, rgba(120, 160, 255, 0.35), transparent 60%),
+    radial-gradient(50% 40% at 82% 22%, rgba(160, 190, 255, 0.28), transparent 60%),
+    radial-gradient(45% 35% at 50% 80%, rgba(120, 210, 255, 0.22), transparent 60%);
+  filter: blur(60px);
+  opacity: 0.8;
+  animation: artist-breathe 24s ease-in-out infinite;
+  transform: translateZ(0) scale(1.15);
+}
+
+@keyframes artist-breathe {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1.15);
+  }
+  50% {
+    transform: translate3d(1.5%, 1%, 0) scale(1.15);
+  }
+  100% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1.15);
+  }
+}
+
+/* Activation 页面背景：深蓝弥散光 + 微光粒子 */
+.activation-bg {
+  background: #050915;
+}
+
+.activation-bg::before {
+  background:
+    radial-gradient(60% 45% at 20% 15%, rgba(48, 92, 255, 0.45), transparent 60%),
+    radial-gradient(45% 40% at 80% 20%, rgba(120, 90, 255, 0.3), transparent 60%),
+    radial-gradient(35% 30% at 50% 80%, rgba(40, 140, 255, 0.25), transparent 60%);
+  filter: blur(70px);
+  opacity: 0.75;
+  animation: activation-glow 26s ease-in-out infinite;
+  transform: translateZ(0) scale(1.2);
+  transition: opacity 0.8s ease, filter 0.8s ease;
+}
+
+.activation-bg::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(2px 2px at 20% 30%, rgba(160, 210, 255, 0.35), transparent 60%),
+    radial-gradient(2px 2px at 70% 20%, rgba(120, 170, 255, 0.3), transparent 60%),
+    radial-gradient(1.5px 1.5px at 40% 70%, rgba(200, 230, 255, 0.25), transparent 60%),
+    radial-gradient(1.5px 1.5px at 85% 60%, rgba(140, 190, 255, 0.25), transparent 60%),
+    radial-gradient(1px 1px at 55% 45%, rgba(180, 220, 255, 0.2), transparent 60%);
+  opacity: 0.6;
+  animation: particle-drift 20s linear infinite;
+  transform: translateZ(0);
+  z-index: 0;
+}
+
+.activation-awakened::before {
+  opacity: 0.95;
+  filter: blur(60px);
+}
+
+@keyframes activation-glow {
+  0% {
+    transform: translate3d(-2%, -1.5%, 0) scale(1.2);
+  }
+  50% {
+    transform: translate3d(2%, 1.5%, 0) scale(1.2);
+  }
+  100% {
+    transform: translate3d(-2%, -1.5%, 0) scale(1.2);
+  }
+}
+
+@keyframes particle-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-1%, 1%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* 智能体呼吸感：轻微缩放 */
+.entity-breathe {
+  animation: entity-breathe 8s ease-in-out infinite;
+  transform: translateZ(0);
+}
+
+@keyframes entity-breathe {
+  0%,
+  100% {
+    transform: translateZ(0) scale(1);
+  }
+  50% {
+    transform: translateZ(0) scale(1.02);
+  }
+}
+
+/* Hero 区弥散光动画层：强调 Apple 风格通栏大屏 */
+.hero-liquid {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.hero-liquid::before {
+  content: '';
+  position: absolute;
+  inset: -18%;
+  background:
+    radial-gradient(40% 30% at 15% 30%, rgba(120, 160, 255, 0.35), transparent 60%),
+    radial-gradient(40% 30% at 85% 20%, rgba(216, 188, 255, 0.35), transparent 60%),
+    radial-gradient(50% 40% at 50% 80%, rgba(255, 200, 220, 0.28), transparent 60%);
+  filter: blur(42px);
+  opacity: 0.9;
+  animation: hero-flow 18s ease-in-out infinite;
+  transform: translateZ(0);
+  will-change: transform;
+  z-index: 0;
+}
+
+.hero-liquid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.4));
+  z-index: 0;
+}
+
+.hero-liquid > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes hero-flow {
+  0% {
+    transform: translate3d(-3%, -2%, 0);
+  }
+  50% {
+    transform: translate3d(3%, 2%, 0);
+  }
+  100% {
+    transform: translate3d(-3%, -2%, 0);
+  }
+}
+
+/* 全局按钮样式：Apple 风格简洁圆角胶囊 */
+.glass-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.4rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform: translateZ(0);
+}
+
+.glass-button:hover {
+  transform: translate3d(0, -1px, 0);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.16);
+}
+
+.glass-button--primary {
+  background: #0b0f1a;
+  color: #ffffff;
+  border-color: #0b0f1a;
+}
+
+.glass-button--ghost {
+  background: rgba(255, 255, 255, 0.65);
+  color: #0b0f1a;
+}
+
+/* 图标型按钮：用于导航栏的搜索入口 */
+.glass-button--icon {
+  padding: 0.4rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+}
+
+/* 玻璃卡片：高透明度 + 高级模糊 + 细边框 + 多重投影 */
+.glass-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.45)),
+    radial-gradient(70% 50% at 0% 0%, rgba(255, 255, 255, 0.7), transparent 60%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 18px 50px rgba(15, 23, 42, 0.12),
+    0 6px 18px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  transform: translateZ(0);
+  transition: background-position 0.6s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  background-size: 120% 120%, 140% 140%;
+  background-position: 0% 0%, 100% 0%;
+  overflow: hidden;
+}
+
+.glass-card:hover {
+  transform: translate3d(0, -2px, 0);
+  box-shadow:
+    0 26px 70px rgba(15, 23, 42, 0.16),
+    0 10px 24px rgba(15, 23, 42, 0.1);
+  background-position: 20% -10%, 80% 10%;
+}
+
+/* 深色背景下的玻璃卡片变体 */
+.glass-card--dark {
+  background:
+    linear-gradient(180deg, rgba(14, 22, 42, 0.7), rgba(8, 12, 28, 0.45)),
+    radial-gradient(70% 50% at 0% 0%, rgba(80, 120, 255, 0.2), transparent 60%);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 光影流动层：作为卡片 hover 时的高光 */
+.glass-card-glow {
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.7), transparent 60%);
+  filter: blur(12px);
+  transform: translateZ(0);
+}
+
+/* 玻璃面板：用于交错的大图模块 */
+.glass-panel {
+  position: relative;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  transform: translateZ(0);
+}
+
+/* Bento 视觉占位：用于情绪配色器的渐变动效 */
+.bento-gradient {
+  height: 140px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(120, 160, 255, 0.55), transparent 60%),
+    radial-gradient(circle at 80% 30%, rgba(200, 170, 255, 0.45), transparent 60%),
+    radial-gradient(circle at 40% 80%, rgba(255, 200, 220, 0.4), transparent 60%);
+  background-size: 200% 200%;
+  animation: bento-flow 10s ease-in-out infinite;
+  transform: translateZ(0);
+}
+
+@keyframes bento-flow {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+/* Bento 视觉占位：音符跳动动效 */
+.bento-notes {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 140px;
+}
+
+.bento-notes span {
+  width: 10px;
+  border-radius: 999px;
+  background: rgba(47, 107, 255, 0.35);
+  animation: note-bounce 1.8s ease-in-out infinite;
+  transform: translateZ(0);
+}
+
+.bento-notes span:nth-child(2) {
+  animation-delay: 0.2s;
+  height: 50%;
+}
+
+.bento-notes span:nth-child(3) {
+  animation-delay: 0.4s;
+  height: 65%;
+}
+
+.bento-notes span:nth-child(4) {
+  animation-delay: 0.6s;
+  height: 40%;
+}
+
+@keyframes note-bounce {
+  0%,
+  100% {
+    height: 35%;
+    opacity: 0.6;
+  }
+  50% {
+    height: 80%;
+    opacity: 1;
+  }
+}
+
+/* 接力绘画小说：微光呼吸灯 */
+.relay-indicator {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(47, 107, 255, 0.85);
+  box-shadow: 0 0 12px rgba(47, 107, 255, 0.7);
+  animation: relay-pulse 2.6s ease-in-out infinite;
+  transform: translateZ(0);
+}
+
+.relay-indicator::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 107, 255, 0.35);
+  animation: relay-ring 2.6s ease-in-out infinite;
+  transform: translateZ(0);
+}
+
+@keyframes relay-pulse {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: translateZ(0) scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: translateZ(0) scale(1.1);
+  }
+}
+
+@keyframes relay-ring {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateZ(0) scale(0.85);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translateZ(0) scale(1.1);
+  }
+}

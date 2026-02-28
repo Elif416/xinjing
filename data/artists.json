@@ -1,0 +1,262 @@
+{
+  "artists": [
+    {
+      "id": "artist-chen",
+      "name": "澄川",
+      "subtitle": "赛博 / 概念场景",
+      "concept": "把孤独与霓虹写成可被触摸的记忆，让每一次心跳都落在城市的光谱里。",
+      "intro": "擅长蓝色霓虹与城市孤独叙事。",
+      "startingPrice": "￥260+",
+      "avatar": "/mock-dream.svg",
+      "stats": [
+        { "label": "活跃度", "value": "92%" },
+        { "label": "完成订单", "value": "128" },
+        { "label": "好评", "value": "4.9" }
+      ],
+      "schedule": { "progress": 72, "label": "当前排期 72%", "eta": "约 2 周后可接单" },
+      "portfolio": [
+        { "id": "chen-01", "title": "霓虹栖地", "image": "/mock-dream.svg", "size": "large" },
+        { "id": "chen-02", "title": "夜航信标", "image": "/mock-map.svg", "size": "tall" },
+        { "id": "chen-03", "title": "低语街区", "image": "/mock-soul.svg", "size": "wide" },
+        { "id": "chen-04", "title": "漂浮城", "image": "/mock-merch.svg", "size": "normal" },
+        { "id": "chen-05", "title": "星港影像", "image": "/mock-ecosystem.svg", "size": "normal" },
+        { "id": "chen-06", "title": "光谱回廊", "image": "/mock-map.svg", "size": "normal" }
+      ],
+      "services": [
+        {
+          "id": "chen-s1",
+          "title": "半身插画",
+          "description": "强调人物情绪氛围的半身肖像。",
+          "price": "￥260+"
+        },
+        {
+          "id": "chen-s2",
+          "title": "全屏情感场景",
+          "description": "适合故事封面与沉浸式情绪画面。",
+          "price": "￥520+"
+        },
+        {
+          "id": "chen-s3",
+          "title": "概念视觉设定",
+          "description": "为系列项目提供统一的视觉基调。",
+          "price": "￥680+"
+        }
+      ]
+    },
+    {
+      "id": "artist-yu",
+      "name": "羽织",
+      "subtitle": "古风 / 人物设定",
+      "concept": "以古风的留白书写情绪，把温柔与克制放在衣袂与眼眸之间。",
+      "intro": "柔和笔触刻画东方情绪。",
+      "startingPrice": "￥220+",
+      "avatar": "/mock-map.svg",
+      "stats": [
+        { "label": "活跃度", "value": "88%" },
+        { "label": "完成订单", "value": "96" },
+        { "label": "好评", "value": "4.8" }
+      ],
+      "schedule": { "progress": 64, "label": "当前排期 64%", "eta": "约 10 天后可接单" },
+      "portfolio": [
+        { "id": "yu-01", "title": "山海旧梦", "image": "/mock-map.svg", "size": "wide" },
+        { "id": "yu-02", "title": "雪夜誓言", "image": "/mock-soul.svg", "size": "tall" },
+        { "id": "yu-03", "title": "折枝书", "image": "/mock-dream.svg", "size": "normal" },
+        { "id": "yu-04", "title": "月下行", "image": "/mock-merch.svg", "size": "large" },
+        { "id": "yu-05", "title": "长歌", "image": "/mock-ecosystem.svg", "size": "normal" },
+        { "id": "yu-06", "title": "归山", "image": "/mock-map.svg", "size": "normal" }
+      ],
+      "services": [
+        {
+          "id": "yu-s1",
+          "title": "古风立绘",
+          "description": "角色完整设定与衣纹刻画。",
+          "price": "￥220+"
+        },
+        {
+          "id": "yu-s2",
+          "title": "情绪场景",
+          "description": "适合故事背景与视觉叙事。",
+          "price": "￥480+"
+        },
+        {
+          "id": "yu-s3",
+          "title": "诗意封面",
+          "description": "书封、章节封面的情感强化。",
+          "price": "￥560+"
+        }
+      ]
+    },
+    {
+      "id": "artist-sen",
+      "name": "森屿",
+      "subtitle": "治愈 / 插画",
+      "concept": "让光影成为情绪的延伸，在温柔色块中记录生活的呼吸。",
+      "intro": "擅长温柔色块与光影。",
+      "startingPrice": "￥180+",
+      "avatar": "/mock-soul.svg",
+      "stats": [
+        { "label": "活跃度", "value": "95%" },
+        { "label": "完成订单", "value": "142" },
+        { "label": "好评", "value": "5.0" }
+      ],
+      "schedule": { "progress": 58, "label": "当前排期 58%", "eta": "约 1 周后可接单" },
+      "portfolio": [
+        { "id": "sen-01", "title": "雾境花园", "image": "/mock-soul.svg", "size": "large" },
+        { "id": "sen-02", "title": "晴昼", "image": "/mock-dream.svg", "size": "normal" },
+        { "id": "sen-03", "title": "小径", "image": "/mock-merch.svg", "size": "tall" },
+        { "id": "sen-04", "title": "温室记忆", "image": "/mock-map.svg", "size": "wide" },
+        { "id": "sen-05", "title": "轻雨", "image": "/mock-ecosystem.svg", "size": "normal" },
+        { "id": "sen-06", "title": "午后", "image": "/mock-soul.svg", "size": "normal" }
+      ],
+      "services": [
+        {
+          "id": "sen-s1",
+          "title": "治愈插画",
+          "description": "适合情绪记录与个人纪念。",
+          "price": "￥180+"
+        },
+        {
+          "id": "sen-s2",
+          "title": "温柔场景",
+          "description": "大幅场景氛围与光影表现。",
+          "price": "￥420+"
+        },
+        {
+          "id": "sen-s3",
+          "title": "情感延展",
+          "description": "系列主题延展与视觉统一。",
+          "price": "￥560+"
+        }
+      ]
+    },
+    {
+      "id": "artist-lu",
+      "name": "陆行",
+      "subtitle": "二次元 / 角色立绘",
+      "concept": "以高饱和角色塑造情感张力，让每个角色都有可被记住的灵魂。",
+      "intro": "高饱和度角色刻画。",
+      "startingPrice": "￥240+",
+      "avatar": "/mock-merch.svg",
+      "stats": [
+        { "label": "活跃度", "value": "90%" },
+        { "label": "完成订单", "value": "117" },
+        { "label": "好评", "value": "4.7" }
+      ],
+      "schedule": { "progress": 70, "label": "当前排期 70%", "eta": "约 12 天后可接单" },
+      "portfolio": [
+        { "id": "lu-01", "title": "情绪战歌", "image": "/mock-merch.svg", "size": "wide" },
+        { "id": "lu-02", "title": "深空旅人", "image": "/mock-dream.svg", "size": "large" },
+        { "id": "lu-03", "title": "蓝域", "image": "/mock-map.svg", "size": "normal" },
+        { "id": "lu-04", "title": "霓虹眼眸", "image": "/mock-soul.svg", "size": "tall" },
+        { "id": "lu-05", "title": "追光", "image": "/mock-ecosystem.svg", "size": "normal" },
+        { "id": "lu-06", "title": "镜像", "image": "/mock-merch.svg", "size": "normal" }
+      ],
+      "services": [
+        {
+          "id": "lu-s1",
+          "title": "角色立绘",
+          "description": "标准立绘与情绪版多张。",
+          "price": "￥240+"
+        },
+        {
+          "id": "lu-s2",
+          "title": "全身场景",
+          "description": "角色与场景融合的叙事画面。",
+          "price": "￥520+"
+        },
+        {
+          "id": "lu-s3",
+          "title": "角色系列",
+          "description": "多角色统一风格与情感表现。",
+          "price": "￥680+"
+        }
+      ]
+    },
+    {
+      "id": "artist-yan",
+      "name": "言澈",
+      "subtitle": "极简 / 抽象情绪",
+      "concept": "用极简线条与留白表达复杂情绪，让情感拥有清晰的轮廓。",
+      "intro": "以极简线条表现情感张力。",
+      "startingPrice": "￥200+",
+      "avatar": "/mock-ecosystem.svg",
+      "stats": [
+        { "label": "活跃度", "value": "84%" },
+        { "label": "完成订单", "value": "74" },
+        { "label": "好评", "value": "4.8" }
+      ],
+      "schedule": { "progress": 48, "label": "当前排期 48%", "eta": "约 5 天后可接单" },
+      "portfolio": [
+        { "id": "yan-01", "title": "空白之上", "image": "/mock-ecosystem.svg", "size": "large" },
+        { "id": "yan-02", "title": "线性记忆", "image": "/mock-map.svg", "size": "wide" },
+        { "id": "yan-03", "title": "静默", "image": "/mock-soul.svg", "size": "normal" },
+        { "id": "yan-04", "title": "深蓝", "image": "/mock-dream.svg", "size": "tall" },
+        { "id": "yan-05", "title": "折线", "image": "/mock-merch.svg", "size": "normal" },
+        { "id": "yan-06", "title": "留白", "image": "/mock-map.svg", "size": "normal" }
+      ],
+      "services": [
+        {
+          "id": "yan-s1",
+          "title": "情绪线稿",
+          "description": "用简洁线条表现情感张力。",
+          "price": "￥200+"
+        },
+        {
+          "id": "yan-s2",
+          "title": "抽象海报",
+          "description": "适合品牌与情感主题展示。",
+          "price": "￥420+"
+        },
+        {
+          "id": "yan-s3",
+          "title": "视觉符号集",
+          "description": "输出统一的极简情感符号。",
+          "price": "￥560+"
+        }
+      ]
+    },
+    {
+      "id": "artist-ning",
+      "name": "宁白",
+      "subtitle": "概念 / UI 视觉",
+      "concept": "将玻璃与光影融入空间叙事，让界面成为情绪的延展。",
+      "intro": "擅长玻璃质感与空间叙事。",
+      "startingPrice": "￥280+",
+      "avatar": "/mock-map.svg",
+      "stats": [
+        { "label": "活跃度", "value": "91%" },
+        { "label": "完成订单", "value": "103" },
+        { "label": "好评", "value": "4.9" }
+      ],
+      "schedule": { "progress": 62, "label": "当前排期 62%", "eta": "约 8 天后可接单" },
+      "portfolio": [
+        { "id": "ning-01", "title": "玻璃剧场", "image": "/mock-map.svg", "size": "wide" },
+        { "id": "ning-02", "title": "光晕庭院", "image": "/mock-soul.svg", "size": "large" },
+        { "id": "ning-03", "title": "界面呼吸", "image": "/mock-ecosystem.svg", "size": "normal" },
+        { "id": "ning-04", "title": "情感地图", "image": "/mock-merch.svg", "size": "tall" },
+        { "id": "ning-05", "title": "透明脉络", "image": "/mock-dream.svg", "size": "normal" },
+        { "id": "ning-06", "title": "回声页", "image": "/mock-map.svg", "size": "normal" }
+      ],
+      "services": [
+        {
+          "id": "ning-s1",
+          "title": "界面情绪设计",
+          "description": "适合情感类 App 的视觉体系。",
+          "price": "￥280+"
+        },
+        {
+          "id": "ning-s2",
+          "title": "交互场景设计",
+          "description": "沉浸式产品与展陈视觉。",
+          "price": "￥520+"
+        },
+        {
+          "id": "ning-s3",
+          "title": "品牌视觉语言",
+          "description": "建立统一的玻璃质感视觉规范。",
+          "price": "￥680+"
+        }
+      ]
+    }
+  ]
+}
