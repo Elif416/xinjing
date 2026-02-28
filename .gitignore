@@ -21,6 +21,11 @@ Thumbs.db
 .idea/
 .vscode/
 
+# Codex / Python cache
+.codex/
+__pycache__/
+*.pyc
+
 # Build
 coverage/
 dist/
