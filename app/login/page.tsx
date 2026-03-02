@@ -1,11 +1,13 @@
-'use client';
+﻿'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { GlassCard } from '@/components/GlassCard';
 
-// 登录页面：极简毛玻璃风格，作为全站访问门槛入口
-export default function LoginPage() {
+export const dynamic = 'force-dynamic';
+
+// 鐧诲綍椤甸潰锛氭瀬绠€姣涚幓鐠冮鏍硷紝浣滀负鍏ㄧ珯璁块棶闂ㄦ鍏ュ彛
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/';
@@ -28,13 +30,13 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        setError('账号或密码错误，请重试。');
+        setError('璐﹀彿鎴栧瘑鐮侀敊璇紝璇烽噸璇曘€?);
         return;
       }
 
       router.replace(redirect);
     } catch (err) {
-      setError('登录失败，请检查网络后重试。');
+      setError('鐧诲綍澶辫触锛岃妫€鏌ョ綉缁滃悗閲嶈瘯銆?);
     } finally {
       setSubmitting(false);
     }
@@ -46,13 +48,13 @@ export default function LoginPage() {
         <GlassCard className="gap-6 p-8">
           <header className="space-y-2">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">HeartMirror</p>
-            <h1 className="text-2xl font-semibold text-ink">登录心镜</h1>
-            <p className="text-sm text-slate-600">仅开放受邀账号访问，登录后可进入所有页面。</p>
+            <h1 className="text-2xl font-semibold text-ink">鐧诲綍蹇冮暅</h1>
+            <p className="text-sm text-slate-600">浠呭紑鏀惧彈閭€璐﹀彿璁块棶锛岀櫥褰曞悗鍙繘鍏ユ墍鏈夐〉闈€?/p>
           </header>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <label className="flex flex-col gap-2 text-xs text-slate-500">
-              邮箱账号
+              閭璐﹀彿
               <input
                 type="email"
                 required
@@ -64,14 +66,14 @@ export default function LoginPage() {
             </label>
 
             <label className="flex flex-col gap-2 text-xs text-slate-500">
-              密码
+              瀵嗙爜
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className="h-11 rounded-2xl border border-white/40 bg-white/70 px-4 text-sm text-ink shadow-sm outline-none transition focus:border-blue-200 focus:ring-2 focus:ring-blue-200/50"
-                placeholder="请输入密码"
+                placeholder="璇疯緭鍏ュ瘑鐮?
               />
             </label>
 
@@ -82,7 +84,7 @@ export default function LoginPage() {
               className="glass-button glass-button--primary w-full justify-center"
               disabled={submitting}
             >
-              {submitting ? '登录中...' : '进入心镜'}
+              {submitting ? '鐧诲綍涓?..' : '杩涘叆蹇冮暅'}
             </button>
           </form>
         </GlassCard>
@@ -90,3 +92,14 @@ export default function LoginPage() {
     </main>
   );
 }
+
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+
