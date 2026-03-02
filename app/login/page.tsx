@@ -6,7 +6,7 @@ import { GlassCard } from '@/components/GlassCard';
 
 export const dynamic = 'force-dynamic';
 
-// 鐧诲綍椤甸潰锛氭瀬绠€姣涚幓鐠冮鏍硷紝浣滀负鍏ㄧ珯璁块棶闂ㄦ鍏ュ彛
+// 登录页面：极简毛玻璃风格，作为全站访问入口
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,13 +30,13 @@ function LoginContent() {
       });
 
       if (!response.ok) {
-        setError('璐﹀彿鎴栧瘑鐮侀敊璇紝璇烽噸璇曘€?);
+        setError('账号或密码错误，请重试。');
         return;
       }
 
       router.replace(redirect);
     } catch (err) {
-      setError('鐧诲綍澶辫触锛岃妫€鏌ョ綉缁滃悗閲嶈瘯銆?);
+      setError('登录失败，请检查网络后重试。');
     } finally {
       setSubmitting(false);
     }
@@ -48,13 +48,15 @@ function LoginContent() {
         <GlassCard className="gap-6 p-8">
           <header className="space-y-2">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">HeartMirror</p>
-            <h1 className="text-2xl font-semibold text-ink">鐧诲綍蹇冮暅</h1>
-            <p className="text-sm text-slate-600">浠呭紑鏀惧彈閭€璐﹀彿璁块棶锛岀櫥褰曞悗鍙繘鍏ユ墍鏈夐〉闈€?/p>
+            <h1 className="text-2xl font-semibold text-ink">登录心镜</h1>
+            <p className="text-sm text-slate-600">
+              仅开放受账号访问，登录后可进入所有页面。
+            </p>
           </header>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <label className="flex flex-col gap-2 text-xs text-slate-500">
-              閭璐﹀彿
+              账号
               <input
                 type="email"
                 required
@@ -66,14 +68,14 @@ function LoginContent() {
             </label>
 
             <label className="flex flex-col gap-2 text-xs text-slate-500">
-              瀵嗙爜
+              密码
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className="h-11 rounded-2xl border border-white/40 bg-white/70 px-4 text-sm text-ink shadow-sm outline-none transition focus:border-blue-200 focus:ring-2 focus:ring-blue-200/50"
-                placeholder="璇疯緭鍏ュ瘑鐮?
+                placeholder="请输入密码"
               />
             </label>
 
@@ -84,7 +86,7 @@ function LoginContent() {
               className="glass-button glass-button--primary w-full justify-center"
               disabled={submitting}
             >
-              {submitting ? '鐧诲綍涓?..' : '杩涘叆蹇冮暅'}
+              {submitting ? '登录中...' : '进入心镜'}
             </button>
           </form>
         </GlassCard>

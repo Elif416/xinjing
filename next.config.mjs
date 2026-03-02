@@ -1,13 +1,12 @@
-﻿/** @type {import('next').NextConfig} */
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 关键：让 Vercel 忽略构建时的 TypeScript 错误
   typescript: {
-    ignoreBuildErrors: true
+    ignoreBuildErrors: true,
   },
-  // 顺便忽略 ESLint 检查，防止因为格式问题再次卡住
+  // 注意：如果上面的写法报错，尝试删掉 eslint 这一段，或者改为：
   eslint: {
-    ignoreDuringBuilds: true
-  }
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
