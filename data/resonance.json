@@ -1,0 +1,209 @@
+{
+  "stats": {
+    "label": "当前共鸣记忆",
+    "base": 1423012
+  },
+  "searchPlaceholder": "搜寻那个让你共鸣的情感频段...",
+  "pins": [
+    {
+      "id": "res-01",
+      "x": 18,
+      "y": 32,
+      "color": "warm",
+      "delay": 120,
+      "title": "去标识化坐标：北纬 31°·多云",
+      "text": "今天，我也终于鼓起勇气辞职了。",
+      "image": "/mock-dream.svg"
+    },
+    {
+      "id": "res-02",
+      "x": 28,
+      "y": 55,
+      "color": "cool",
+      "delay": 300,
+      "title": "去标识化坐标：北纬 45°·微雨",
+      "text": "我在雨里走了很久，心情却变得平静。",
+      "image": "/mock-soul.svg"
+    },
+    {
+      "id": "res-03",
+      "x": 42,
+      "y": 40,
+      "color": "calm",
+      "delay": 180,
+      "title": "去标识化坐标：北纬 23°·晴",
+      "text": "有人说，我的声音像海边的风。",
+      "image": "/mock-dream.svg"
+    },
+    {
+      "id": "res-04",
+      "x": 55,
+      "y": 28,
+      "color": "warm",
+      "delay": 480,
+      "title": "去标识化坐标：北纬 12°·日落",
+      "text": "这座城市让我重新找回了热烈。",
+      "image": "/mock-merch.svg"
+    },
+    {
+      "id": "res-05",
+      "x": 66,
+      "y": 46,
+      "color": "cool",
+      "delay": 260,
+      "title": "去标识化坐标：北纬 50°·多云",
+      "text": "每一次沉默，都是为了下一次拥抱。",
+      "image": "/mock-ecosystem.svg"
+    },
+    {
+      "id": "res-06",
+      "x": 74,
+      "y": 60,
+      "color": "calm",
+      "delay": 520,
+      "title": "去标识化坐标：北纬 37°·微风",
+      "text": "我终于学会与过去和解。",
+      "image": "/mock-map.svg"
+    },
+    {
+      "id": "res-07",
+      "x": 36,
+      "y": 70,
+      "color": "warm",
+      "delay": 340,
+      "title": "去标识化坐标：北纬 19°·晴",
+      "text": "把故事写给未来的自己。",
+      "image": "/mock-dream.svg"
+    },
+    {
+      "id": "res-08",
+      "x": 12,
+      "y": 62,
+      "color": "cool",
+      "delay": 420,
+      "title": "去标识化坐标：北纬 60°·小雪",
+      "text": "记忆像雪一样轻，落在心上却很暖。",
+      "image": "/mock-soul.svg"
+    },
+    {
+      "id": "res-09",
+      "x": 48,
+      "y": 22,
+      "color": "calm",
+      "delay": 160,
+      "title": "去标识化坐标：北纬 27°·薄雾",
+      "text": "我想把这份宁静放进漂流瓶。",
+      "image": "/mock-merch.svg"
+    },
+    {
+      "id": "res-10",
+      "x": 62,
+      "y": 72,
+      "color": "warm",
+      "delay": 600,
+      "title": "去标识化坐标：北纬 8°·夜晚",
+      "text": "我听见一颗流星坠落的声音。",
+      "image": "/mock-ecosystem.svg"
+    },
+    {
+      "id": "res-11",
+      "x": 83,
+      "y": 38,
+      "color": "cool",
+      "delay": 240,
+      "title": "去标识化坐标：北纬 52°·阴",
+      "text": "你说的那句再见，我还没有忘。",
+      "image": "/mock-map.svg"
+    },
+    {
+      "id": "res-12",
+      "x": 24,
+      "y": 20,
+      "color": "calm",
+      "delay": 360,
+      "title": "去标识化坐标：北纬 29°·微光",
+      "text": "一束光照进来，就够了。",
+      "image": "/mock-dream.svg"
+    },
+    {
+      "id": "res-13",
+      "x": 90,
+      "y": 58,
+      "color": "warm",
+      "delay": 460,
+      "title": "去标识化坐标：北纬 33°·微风",
+      "text": "在陌生街道里，我看见了熟悉的自己。",
+      "image": "/mock-merch.svg"
+    },
+    {
+      "id": "res-14",
+      "x": 8,
+      "y": 42,
+      "color": "calm",
+      "delay": 540,
+      "title": "去标识化坐标：北纬 5°·晴",
+      "text": "每一次呼吸，都像是新的开始。",
+      "image": "/mock-ecosystem.svg"
+    },
+    {
+      "id": "res-15",
+      "x": 58,
+      "y": 52,
+      "color": "cool",
+      "delay": 280,
+      "title": "去标识化坐标：北纬 41°·薄暮",
+      "text": "我把名字写进了晚霞。",
+      "image": "/mock-map.svg"
+    },
+    {
+      "id": "res-16",
+      "x": 46,
+      "y": 58,
+      "color": "warm",
+      "delay": 320,
+      "title": "去标识化坐标：北纬 21°·晴",
+      "text": "今天的风很轻，像在鼓励我。",
+      "image": "/mock-soul.svg"
+    },
+    {
+      "id": "res-17",
+      "x": 70,
+      "y": 32,
+      "color": "calm",
+      "delay": 210,
+      "title": "去标识化坐标：北纬 48°·晴",
+      "text": "我试着把心事写成一首歌。",
+      "image": "/mock-dream.svg"
+    },
+    {
+      "id": "res-18",
+      "x": 32,
+      "y": 26,
+      "color": "cool",
+      "delay": 390,
+      "title": "去标识化坐标：北纬 38°·雾",
+      "text": "你说的那句抱歉，我已放下。",
+      "image": "/mock-merch.svg"
+    },
+    {
+      "id": "res-19",
+      "x": 40,
+      "y": 48,
+      "color": "warm",
+      "delay": 570,
+      "title": "去标识化坐标：北纬 14°·清晨",
+      "text": "我在清晨写下勇敢的词。",
+      "image": "/mock-map.svg"
+    },
+    {
+      "id": "res-20",
+      "x": 78,
+      "y": 44,
+      "color": "calm",
+      "delay": 140,
+      "title": "去标识化坐标：北纬 54°·夜色",
+      "text": "黑夜里，我仍然相信光。",
+      "image": "/mock-soul.svg"
+    }
+  ]
+}

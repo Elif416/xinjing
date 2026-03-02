@@ -76,7 +76,8 @@
     "title": "【共鸣】集体记忆地图",
     "description": "结合 UGC 与地理坐标，构建沉浸式数字家园，形成跨时空的温暖共鸣。",
     "image": "/mock-map.svg",
-    "align": "left"
+    "align": "left",
+    "href": "/resonance"
   },
   "commerce": {
     "id": "workshop",
