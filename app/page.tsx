@@ -33,7 +33,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#f5f5f7] text-ink">
       <div className="page-bg">
         {/* Apple 风格导航栏：抽离成可复用组件，确保多页面一致 */}
-        <GlassNavbar brand={brand} items={navItems} />
+        <GlassNavbar brand={brand} items={navItems} showBackButton={false} />
 
         <main className="flex flex-col gap-24">
           {/* Hero 视差英雄区：通栏大屏 + 弥散光 */}
@@ -78,6 +78,7 @@ export default function Home() {
                     title={item.title}
                     description={item.description}
                     size={item.size === 'large' ? 'large' : 'small'}
+                    href={item.href}
                   >
                     {item.id === 'palette' ? (
                       <div className="mt-6 rounded-[20px] border border-white/40 bg-white/70 p-4">
@@ -155,7 +156,7 @@ export default function Home() {
                       key={section.id}
                       id={section.id}
                       href={section.href}
-                      className="group grid items-center gap-10 scroll-mt-24 transition-opacity hover:opacity-90 md:grid-cols-2"
+                      className="clickable-surface group grid items-center gap-10 scroll-mt-24 transition-opacity hover:opacity-95 md:grid-cols-2"
                     >
                       {sectionContent}
                     </a>
@@ -187,7 +188,7 @@ export default function Home() {
                   <a key={item.title} href={item.href ?? '#'} className="block h-full">
                     {/* 3D 玻璃卡片：整卡可点击跳转，对应后续页面 */}
                     <CardContainer className="h-full" containerClassName="py-0">
-                      <CardBody className="glass-card group/card relative isolate flex h-full w-full flex-col gap-4 rounded-3xl p-6 cursor-pointer">
+                      <CardBody className="glass-card clickable-card group/card relative isolate flex h-full w-full flex-col gap-4 rounded-3xl p-6 cursor-pointer">
                         <CardItem translateZ={50} className="text-lg font-semibold text-ink">
                           {item.title}
                         </CardItem>

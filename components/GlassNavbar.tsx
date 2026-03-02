@@ -1,4 +1,5 @@
 import { Search, UserCircle } from 'lucide-react';
+import clsx from 'clsx';
 import { BackButton } from './BackButton';
 
 export type GlassNavItem = {
@@ -12,16 +13,28 @@ export type GlassNavbarProps = {
     en?: string;
   };
   items?: GlassNavItem[];
+  showBackButton?: boolean;
+  className?: string;
 };
 
 // GlassNavbar：复用首页的玻璃导航栏样式，确保多页面一致性
 // 通过 props 注入品牌与导航数据，避免硬编码，便于后续扩展
-export function GlassNavbar({ brand, items = [] }: GlassNavbarProps) {
+export function GlassNavbar({
+  brand,
+  items = [],
+  showBackButton = true,
+  className
+}: GlassNavbarProps) {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/30 bg-white/60 backdrop-blur-[20px]">
+    <header
+      className={clsx(
+        'sticky top-0 z-[200] w-full border-b border-white/30 bg-white backdrop-blur-[20px]',
+        className
+      )}
+    >
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 text-[12px] text-slate-700">
         <div className="flex items-center gap-3">
-          <BackButton />
+          {showBackButton ? <BackButton /> : null}
           <a href="/" className="flex items-center gap-2 text-sm text-ink">
             <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/40 bg-white/70 shadow-sm">
               心镜

@@ -20,6 +20,10 @@
     {
       "label": "实体工坊",
       "href": "#workshop"
+    },
+    {
+      "label": "?????",
+      "href": "/emotion-color-mixer"
     }
   ],
   "hero": {
@@ -35,7 +39,8 @@
         "id": "palette",
         "title": "情绪配色器",
         "description": "一键将抽象情绪转化为可感知的数字艺术品。",
-        "size": "large"
+        "size": "large",
+        "href": "/emotion-color-mixer"
       },
       {
         "id": "symphony",

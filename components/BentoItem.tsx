@@ -9,6 +9,7 @@ export type BentoItemProps = {
   size?: 'large' | 'small';
   children?: React.ReactNode;
   className?: string;
+  href?: string;
 };
 
 // BentoItem：便当盒布局中的单元
@@ -18,16 +19,31 @@ export function BentoItem({
   description,
   size = 'small',
   children,
-  className
+  className,
+  href
 }: BentoItemProps) {
   const sizeClass =
     size === 'large' ? 'md:col-span-2' : 'md:col-span-1';
 
+  const content = (
+    <GlassCard
+      title={title}
+      description={description}
+      className={href ? 'cursor-pointer clickable-card' : undefined}
+    >
+      {children}
+    </GlassCard>
+  );
+
   return (
     <div className={clsx(sizeClass, className)}>
-      <GlassCard title={title} description={description}>
-        {children}
-      </GlassCard>
+      {href ? (
+        <a href={href} className="block h-full">
+          {content}
+        </a>
+      ) : (
+        content
+      )}
     </div>
   );
 }
