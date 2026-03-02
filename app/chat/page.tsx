@@ -127,8 +127,11 @@ export default function ChatPage() {
     const userContent: ChatMessage = {
       role: 'user',
       content: [
-        ...(input.trim() ? [{ type: 'text', text: input.trim() }] : []),
-        ...images.map((image) => ({ type: 'image_url', image_url: { url: image } }))
+        ...(input.trim() ? [{ type: 'text' as const, text: input.trim() }] : []),
+        ...images.map((image) => ({
+          type: 'image_url' as const,
+          image_url: { url: image }
+        }))
       ]
     };
 
