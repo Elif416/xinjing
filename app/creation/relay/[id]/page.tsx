@@ -58,7 +58,9 @@ export default function RelayStoryPage() {
 
   const revealInitial = shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 };
   const revealWhile = { opacity: 1, y: 0 };
-  const revealTransition = shouldReduceMotion ? { duration: 0 } : { duration: 0.6, ease: 'easeOut' };
+  const revealTransition = (shouldReduceMotion
+    ? { duration: 0 }
+    : { duration: 0.6, ease: 'easeOut' }) as const;
 
   if (!relayStory) {
     return (

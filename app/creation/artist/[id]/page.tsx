@@ -81,7 +81,7 @@ export default function ArtistDetailPage() {
       y: 0,
       transition: { duration: shouldReduceMotion ? 0 : 0.6, ease: 'easeOut' }
     }
-  };
+  } as const;
 
   const sizeClassMap: Record<string, string> = {
     large: 'md:col-span-2 md:row-span-2',

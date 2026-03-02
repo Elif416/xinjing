@@ -29,9 +29,9 @@ export function CommissionFormModal({ open, onClose, onSubmit }: CommissionFormM
   const [deadline, setDeadline] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const modalTransition = shouldReduceMotion
+  const modalTransition = (shouldReduceMotion
     ? { duration: 0 }
-    : { type: 'spring', damping: 26, stiffness: 260 };
+    : { type: 'spring', damping: 26, stiffness: 260 }) as const;
 
   const currentStepLabel = useMemo(() => {
     if (step === 1) return '定义情感';

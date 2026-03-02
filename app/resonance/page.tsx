@@ -114,9 +114,9 @@ export default function ResonancePage() {
     return new Intl.NumberFormat('zh-CN').format(resonanceCount);
   }, [resonanceCount]);
 
-  const modalTransition = shouldReduceMotion
+  const modalTransition = (shouldReduceMotion
     ? { duration: 0 }
-    : { type: 'spring', damping: 26, stiffness: 240 };
+    : { type: 'spring', damping: 26, stiffness: 240 }) as const;
 
   const selectedIsInjected = resonanceSelected
     ? Boolean(resonanceInjected[resonanceSelected.id])

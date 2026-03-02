@@ -89,9 +89,9 @@ export default function CreationPage() {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [creationModal]);
 
-  const modalTransition = shouldReduceMotion
+  const modalTransition = (shouldReduceMotion
     ? { duration: 0 }
-    : { type: 'spring', damping: 26, stiffness: 260 };
+    : { type: 'spring', damping: 26, stiffness: 260 }) as const;
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-ink">

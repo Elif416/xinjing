@@ -170,9 +170,9 @@ export default function EmotionColorMixerPage() {
     return entries[0][0];
   }, [joy, melancholy, serenity]);
 
-  const gradientTransition = shouldReduceMotion
+  const gradientTransition = (shouldReduceMotion
     ? { duration: 0 }
-    : { type: 'spring', stiffness: 120, damping: 22 };
+    : { type: 'spring', stiffness: 120, damping: 22 }) as const;
 
   return (
     <div className="min-h-screen bg-white text-ink">
