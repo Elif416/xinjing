@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifyAuthToken } from './lib/authToken';
 
@@ -18,7 +18,7 @@ function isPublicPath(pathname: string) {
 }
 
 // 登录门禁：未登录则跳转至 /login
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   if (isPublicPath(pathname)) {
