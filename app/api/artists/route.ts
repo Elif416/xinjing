@@ -46,6 +46,10 @@ function clampInteger(
 }
 
 function parseOptionalNumber(value: string | null) {
+  if (value == null || value.trim() === '') {
+    return undefined;
+  }
+
   const parsed = Number(value);
 
   if (!Number.isFinite(parsed)) {
