@@ -1,15 +1,16 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Plus, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import Link from 'next/link';
 
-import { ArtistCard, ArtistCardData } from '@/components/ArtistCard';
+import { ArtistCard } from '@/components/ArtistCard';
 import { GlassCard } from '@/components/GlassCard';
 import { GlassNavbar } from '@/components/GlassNavbar';
 import creationData from '@/data/creation.json';
 import homeData from '@/data/home.json';
+import type { ArtistGridItem, ArtistsPageResponse } from '@/lib/artistTypes';
 
 type CreationStory = {
   id: string;
@@ -28,6 +29,8 @@ type CreationModalContent = {
   image?: string;
   meta?: string;
 };
+
+const ARTIST_PAGE_SIZE = 12;
 
 export default function CreationPage() {
   // 复用首页的品牌与导航配置，保持视觉与信息架构一致
@@ -55,24 +58,35 @@ export default function CreationPage() {
     price: { min: 100, max: 800, step: 50, default: 300 }
   };
 
-  const creationArtists: ArtistCardData[] = Array.isArray(creationData.artists)
-    ? creationData.artists
-    : [];
-
   const creationEmptyState = creationData.emptyState ?? '暂无匹配画师，换个关键词试试？';
+  const styleOptions = useMemo(
+    () => ['全部', ...(Array.isArray(creationFilters.styles) ? creationFilters.styles : [])],
+    [creationFilters.styles]
+  );
+  const scheduleOptions = useMemo(
+    () => ['全部', ...(Array.isArray(creationFilters.schedules) ? creationFilters.schedules : [])],
+    [creationFilters.schedules]
+  );
+  const creationPriceMax = creationFilters.price?.max ?? 800;
 
-  const [creationStyle, setCreationStyle] = useState(
-    creationFilters.styles?.[0] ?? '全部'
-  );
-  const [creationSchedule, setCreationSchedule] = useState(
-    creationFilters.schedules?.[0] ?? '全部'
-  );
-  const [creationPrice, setCreationPrice] = useState(
-    creationFilters.price?.default ?? 300
-  );
+  const [creationStyle, setCreationStyle] = useState(styleOptions[0] ?? '全部');
+  const [creationSchedule, setCreationSchedule] = useState(scheduleOptions[0] ?? '全部');
+  const [creationPrice, setCreationPrice] = useState(creationPriceMax);
   const [creationModal, setCreationModal] = useState<CreationModalContent | null>(null);
+  const [creationArtists, setCreationArtists] = useState<ArtistGridItem[]>([]);
+  const [artistsTotal, setArtistsTotal] = useState(0);
+  const [artistsLoading, setArtistsLoading] = useState(true);
+  const [artistsLoadingMore, setArtistsLoadingMore] = useState(false);
+  const [artistsError, setArtistsError] = useState('');
+  const [hasMoreArtists, setHasMoreArtists] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const activeQueryKeyRef = useRef('');
 
   const shouldReduceMotion = useReducedMotion();
+  const artistQueryKey = useMemo(
+    () => JSON.stringify({ creationStyle, creationSchedule, creationPrice }),
+    [creationPrice, creationSchedule, creationStyle]
+  );
 
   useEffect(() => {
     if (!creationModal) {
@@ -92,6 +106,125 @@ export default function CreationPage() {
   const modalTransition = (shouldReduceMotion
     ? { duration: 0 }
     : { type: 'spring', damping: 26, stiffness: 260 }) as const;
+
+  const buildArtistsQuery = useCallback(
+    (offset: number) => {
+      const params = new URLSearchParams({
+        offset: String(offset),
+        limit: String(ARTIST_PAGE_SIZE)
+      });
+
+      if (creationStyle !== '全部') {
+        params.set('keyword', creationStyle);
+      }
+
+      if (creationPrice < creationPriceMax) {
+        params.set('priceMax', String(creationPrice));
+      }
+
+      return params.toString();
+    },
+    [creationPrice, creationPriceMax, creationStyle]
+  );
+
+  const fetchArtistsPage = useCallback(
+    async (offset: number, mode: 'reset' | 'append') => {
+      const queryKey = activeQueryKeyRef.current;
+
+      if (mode === 'reset') {
+        setArtistsLoading(true);
+        setArtistsError('');
+      } else {
+        setArtistsLoadingMore(true);
+      }
+
+      try {
+        const response = await fetch(`/api/artists?${buildArtistsQuery(offset)}`, {
+          cache: 'no-store'
+        });
+
+        if (!response.ok) {
+          throw new Error('画师数据加载失败');
+        }
+
+        const payload = (await response.json()) as ArtistsPageResponse;
+
+        if (activeQueryKeyRef.current !== queryKey) {
+          return;
+        }
+
+        setCreationArtists((prev) =>
+          mode === 'reset' ? payload.items : [...prev, ...payload.items]
+        );
+        setArtistsTotal(payload.total);
+        setHasMoreArtists(payload.hasMore);
+      } catch (error) {
+        if (activeQueryKeyRef.current !== queryKey) {
+          return;
+        }
+
+        setArtistsError(
+          error instanceof Error ? error.message : '画师数据加载失败，请稍后重试。'
+        );
+
+        if (mode === 'reset') {
+          setCreationArtists([]);
+          setArtistsTotal(0);
+          setHasMoreArtists(false);
+        }
+      } finally {
+        if (activeQueryKeyRef.current !== queryKey) {
+          return;
+        }
+
+        if (mode === 'reset') {
+          setArtistsLoading(false);
+        } else {
+          setArtistsLoadingMore(false);
+        }
+      }
+    },
+    [buildArtistsQuery]
+  );
+
+  useEffect(() => {
+    activeQueryKeyRef.current = artistQueryKey;
+    setCreationArtists([]);
+    setArtistsTotal(0);
+    setHasMoreArtists(false);
+    void fetchArtistsPage(0, 'reset');
+  }, [artistQueryKey, fetchArtistsPage]);
+
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+
+    if (!sentinel || !hasMoreArtists || artistsLoading || artistsLoadingMore) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        void fetchArtistsPage(creationArtists.length, 'append');
+      },
+      { rootMargin: '240px 0px' }
+    );
+
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [
+    artistsLoading,
+    artistsLoadingMore,
+    creationArtists.length,
+    fetchArtistsPage,
+    hasMoreArtists
+  ]);
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-ink">
@@ -189,8 +322,8 @@ export default function CreationPage() {
                     风格选择
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {creationFilters.styles?.length ? (
-                      creationFilters.styles.map((style) => (
+                    {styleOptions.length ? (
+                      styleOptions.map((style) => (
                         <button
                           key={style}
                           type="button"
@@ -217,7 +350,9 @@ export default function CreationPage() {
                   </p>
                   <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
                     <span>￥{creationFilters.price?.min ?? 0}</span>
-                    <span className="font-semibold text-ink">￥{creationPrice}+</span>
+                    <span className="font-semibold text-ink">
+                      {creationPrice < creationPriceMax ? `￥${creationPrice}` : '不限'}
+                    </span>
                     <span>￥{creationFilters.price?.max ?? 0}</span>
                   </div>
                   <input
@@ -236,8 +371,8 @@ export default function CreationPage() {
                     排期状态
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {creationFilters.schedules?.length ? (
-                      creationFilters.schedules.map((schedule) => (
+                    {scheduleOptions.length ? (
+                      scheduleOptions.map((schedule) => (
                         <button
                           key={schedule}
                           type="button"
@@ -260,7 +395,10 @@ export default function CreationPage() {
 
                 <div className="rounded-2xl border border-white/40 bg-white/70 p-4 text-xs text-slate-500">
                   <p>当前筛选：</p>
-                  <p className="mt-2 text-ink">{creationStyle} · {creationSchedule} · ￥{creationPrice}+</p>
+                  <p className="mt-2 text-ink">
+                    {creationStyle} · {creationSchedule} ·{' '}
+                    {creationPrice < creationPriceMax ? `￥${creationPrice}` : '预算不限'}
+                  </p>
                 </div>
               </div>
             </GlassCard>
@@ -277,22 +415,35 @@ export default function CreationPage() {
                 </div>
                 <div className="flex items-center gap-2 rounded-full border border-white/50 bg-white/70 px-4 py-1 text-xs text-slate-600 shadow-sm">
                   <Sparkles className="h-3 w-3" />
-                  匹配 {creationArtists.length} 位画师
+                  匹配 {artistsTotal} 位画师
                 </div>
               </div>
 
-              {creationArtists.length > 0 ? (
+              {artistsLoading ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 px-4 py-10 text-center text-sm text-slate-500">
+                  正在从数据库加载画师数据...
+                </div>
+              ) : creationArtists.length > 0 ? (
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {creationArtists.map((artist) => (
                     <ArtistCard
                       key={artist.id}
-                      artist={artist}
+                      artist={{
+                        id: artist.id,
+                        name: artist.name,
+                        specialty: artist.keywordSummary,
+                        price: artist.price,
+                        image: artist.image,
+                        avatar: artist.avatar,
+                        note: artist.intro,
+                        href: artist.href
+                      }}
                       onOpen={(target) =>
                         setCreationModal({
                           title: target.name,
                           description: target.note ?? target.specialty,
                           image: target.image,
-                          meta: target.price
+                          meta: [target.price, target.specialty].filter(Boolean).join(' · ')
                         })
                       }
                     />
@@ -301,9 +452,22 @@ export default function CreationPage() {
               ) : (
                 // 空状态逻辑：数据为空时显示提示信息，便于异常与边界处理
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 px-4 py-10 text-center text-sm text-slate-500">
-                  {creationEmptyState}
+                  {artistsError || creationEmptyState}
                 </div>
               )}
+
+              {creationArtists.length > 0 ? (
+                <div className="flex flex-col items-center gap-3 py-2">
+                  <div ref={loadMoreRef} className="h-1 w-full" aria-hidden="true" />
+                  {artistsLoadingMore ? (
+                    <p className="text-xs text-slate-500">正在加载更多画师...</p>
+                  ) : hasMoreArtists ? (
+                    <p className="text-xs text-slate-400">继续下滑以加载更多画师</p>
+                  ) : (
+                    <p className="text-xs text-slate-400">已展示全部画师</p>
+                  )}
+                </div>
+              ) : null}
             </div>
           </section>
         </main>

@@ -23,6 +23,7 @@ Thumbs.db
 
 # Codex / Python cache
 .codex/
+.openclaw/
 __pycache__/
 *.pyc
 
