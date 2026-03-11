@@ -1,45 +1,42 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Bot, ChevronDown, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+import { AgentConfigEditor, type AgentEditorDraft } from '@/components/agent/AgentConfigEditor';
 import { ActivationTrigger } from '@/components/activation/ActivationTrigger';
-import { EntityContainer } from '@/components/activation/EntityContainer';
-import { MemoryInfusionPanel, MemoryItem } from '@/components/activation/MemoryInfusionPanel';
-import { PersonalityMatrix } from '@/components/activation/PersonalityMatrix';
+import { GlassCard } from '@/components/GlassCard';
 import { GlassNavbar } from '@/components/GlassNavbar';
 import activationData from '@/data/activation.json';
 import homeData from '@/data/home.json';
-import { sendCharacterSetup } from '@/lib/activationApi';
-import { generateCharacterBundle } from '@/lib/characterBundle';
-import { SoulMemory, useSoulStore } from '@/lib/useSoulStore';
+import type { AgentConfigInput, AgentListItem } from '@/lib/agentTypes';
+
+const INITIAL_DRAFT: AgentEditorDraft = {
+  name: '',
+  keywordsInput: '',
+  emotionalTraits: {
+    emotion: 70,
+    logic: 50,
+    humor: 55
+  },
+  memories: [],
+  worldbookText: '',
+  worldbookFileName: '',
+  characterCardText: '',
+  characterCardFileName: ''
+};
 
 export default function ActivationPage() {
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion();
-  const [isAwakened, setIsAwakened] = useState(false);
+  const setupRef = useRef<HTMLDivElement | null>(null);
 
-  // Zustand 持久化状态：统一管理灵魂配置
-  const {
-    name,
-    keywords,
-    emotionalTraits,
-    memories,
-    setName,
-    setKeywords,
-    setEmotionalTraits,
-    setMemories,
-    setCharacterBundle
-  } = useSoulStore();
+  const [draft, setDraft] = useState<AgentEditorDraft>(INITIAL_DRAFT);
+  const [agents, setAgents] = useState<AgentListItem[]>([]);
+  const [loadingAgents, setLoadingAgents] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState('');
 
-  const [keywordsInput, setKeywordsInput] = useState(keywords.join(' / '));
-
-  useEffect(() => {
-    setKeywordsInput(keywords.join(' / '));
-  }, [keywords]);
-
-  // 复用首页导航数据：保持全站信息结构一致，避免硬编码
   const activationNavItems = useMemo(() => {
     const items = Array.isArray(homeData.nav) ? homeData.nav : [];
     return items.map((item) => ({
@@ -48,142 +45,235 @@ export default function ActivationPage() {
     }));
   }, []);
 
-  const memoryItems: MemoryItem[] = activationData.memory.items as MemoryItem[];
-  const selectedMemoryIds = useMemo(
-    () => new Set(memories.map((memory) => memory.id)),
-    [memories]
-  );
+  const resonanceScore = useMemo(() => {
+    const memoriesWeight = Math.min(45, draft.memories.length * 12);
+    const textWeight = draft.worldbookText || draft.characterCardText ? 20 : 0;
+    const traitWeight =
+      (draft.emotionalTraits.emotion + draft.emotionalTraits.logic + draft.emotionalTraits.humor) /
+      5;
 
-  const handleToggleMemory = (id: string) => {
-    if (selectedMemoryIds.has(id)) {
-      setMemories(memories.filter((memory) => memory.id !== id));
+    return Math.min(100, Math.round(memoriesWeight + textWeight + traitWeight));
+  }, [draft]);
+
+  useEffect(() => {
+    async function loadAgents() {
+      setLoadingAgents(true);
+
+      try {
+        const response = await fetch('/api/agents', { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error('智能体列表加载失败');
+        }
+
+        const payload = (await response.json()) as { items: AgentListItem[] };
+        setAgents(payload.items ?? []);
+      } catch (loadError) {
+        setError(
+          loadError instanceof Error ? loadError.message : '智能体列表加载失败，请稍后重试。'
+        );
+      } finally {
+        setLoadingAgents(false);
+      }
+    }
+
+    void loadAgents();
+  }, []);
+
+  const handleCreateAgent = async () => {
+    if (!draft.name.trim()) {
+      setError('请先填写智能体名字。');
+      setupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
-    const target = memoryItems.find((item) => item.id === id);
-    if (!target) return;
-    const payload: SoulMemory = {
-      id: target.id,
-      text: `${target.title}：${target.description}`,
-      image: target.image ?? ''
-    };
-    setMemories([...memories, payload]);
-  };
 
-  // 共鸣程度：根据记忆注入与人格参数估算，后续可接入 AI 服务真实数值
-  const resonanceScore = useMemo(() => {
-    const memoryWeight = memoryItems.length
-      ? (memories.length / memoryItems.length) * 40
-      : 0;
-    const personalityAvg =
-      (emotionalTraits.emotion + emotionalTraits.logic + emotionalTraits.humor) / 3;
-    const personalityWeight = (personalityAvg / 100) * 60;
-    return Math.min(100, Math.round(memoryWeight + personalityWeight));
-  }, [memories.length, memoryItems.length, emotionalTraits]);
+    setCreating(true);
+    setError('');
 
-  const handleActivate = () => {
-    setIsAwakened(true);
-    // 生成 SillyTavern 风格角色卡，并持久化到 Store
-    const bundle = generateCharacterBundle({
-      name,
-      keywords,
-      emotionalTraits,
-      memories
-    });
-    setCharacterBundle(bundle);
-    // 预集成 API：将角色设定发送到后端 / 大模型
-    void sendCharacterSetup(bundle).catch(() => null);
-    const delay = shouldReduceMotion ? 0 : 450;
-    window.setTimeout(() => {
-      router.push('/chat');
-    }, delay);
+    try {
+      const response = await fetch('/api/agents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(buildCreatePayload(draft))
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: string };
+        throw new Error(payload.error || '智能体创建失败');
+      }
+
+      const payload = (await response.json()) as { id: number };
+      router.push(`/chat?agentId=${payload.id}`);
+    } catch (createError) {
+      setError(
+        createError instanceof Error ? createError.message : '智能体创建失败，请稍后重试。'
+      );
+      setCreating(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#050915] text-white">
-      <div className={`page-bg activation-bg ${isAwakened ? 'activation-awakened' : ''}`}>
+      <div className="page-bg activation-bg">
         <GlassNavbar
           brand={homeData.brand ?? { name: '心镜', en: 'HeartMirror' }}
           items={activationNavItems}
         />
 
         <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-16">
-          {/* 数字生命容器：主视觉区域，承载智能体艺术图 */}
-          <EntityContainer
-            image={activationData.entity.image}
-            title={activationData.entity.title}
-            description={activationData.entity.description}
-            awakened={isAwakened}
-          />
+          <section className="rounded-[36px] border border-white/15 bg-white/8 p-8 shadow-[0_30px_80px_rgba(2,12,32,0.35)] backdrop-blur-[24px]">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-blue-100/60">
+                  Activation · Agent Shelf
+                </p>
+                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-4xl">
+                  已建立的智能体
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-blue-100/75">
+                  顶部区域改为长期可用的智能体列表。点击已有智能体可直接进入对话；若要新建，请继续下滑完成设定。
+                </p>
+              </div>
 
-          {/* 人格特征配置区：Bento Grid 玻璃卡片 */}
-          <PersonalityMatrix
-            name={name}
-            traits={keywordsInput}
-            nameLabel={activationData.personality.fields.name}
-            traitsLabel={activationData.personality.fields.traits}
-            onNameChange={setName}
-            onTraitsChange={(value) => {
-              setKeywordsInput(value);
-              setKeywords(parseKeywords(value));
-            }}
-            sliders={[
-              {
-                id: 'emotion',
-                label: activationData.personality.sliders[0].label,
-                value: emotionalTraits.emotion,
-                onChange: (value) =>
-                  setEmotionalTraits({ ...emotionalTraits, emotion: value })
-              },
-              {
-                id: 'logic',
-                label: activationData.personality.sliders[1].label,
-                value: emotionalTraits.logic,
-                onChange: (value) =>
-                  setEmotionalTraits({ ...emotionalTraits, logic: value })
-              },
-              {
-                id: 'humor',
-                label: activationData.personality.sliders[2].label,
-                value: emotionalTraits.humor,
-                onChange: (value) =>
-                  setEmotionalTraits({ ...emotionalTraits, humor: value })
-              }
-            ]}
-          />
+              <button
+                type="button"
+                onClick={() => setupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                className="glass-button glass-button--ghost text-sm"
+              >
+                <Plus className="h-4 w-4" />
+                新建智能体
+              </button>
+            </div>
 
-          {/* 记忆注入面板：横向滚动卡片组 */}
-          <MemoryInfusionPanel
-            title={activationData.memory.title}
-            items={memoryItems}
-            selected={Array.from(selectedMemoryIds)}
-            onToggle={handleToggleMemory}
-          />
+            <div className="mt-8">
+              {loadingAgents ? (
+                <div className="rounded-[28px] border border-white/15 bg-black/10 px-6 py-16 text-center text-blue-100/75">
+                  正在加载已有智能体...
+                </div>
+              ) : agents.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {agents.map((agent) => (
+                    <button
+                      key={agent.id}
+                      type="button"
+                      onClick={() => router.push(`/chat?agentId=${agent.id}`)}
+                      className="rounded-[28px] border border-white/15 bg-white/8 p-5 text-left transition hover:-translate-y-0.5 hover:bg-white/10"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10">
+                            {agent.avatarUrl ? (
+                              <img
+                                src={agent.avatarUrl}
+                                alt={agent.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Bot className="h-5 w-5 text-blue-100" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-lg font-semibold text-white">{agent.name}</p>
+                            <p className="text-xs text-blue-100/60">
+                              {agent.status === 'building'
+                                ? '正在生成'
+                                : agent.status === 'error'
+                                  ? '初始化失败'
+                                  : '可直接对话'}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-blue-100/70">
+                          {agent.keywords.slice(0, 2).join(' / ') || '已建立'}
+                        </span>
+                      </div>
+                      <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-blue-100/75">
+                        {agent.summary}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-[28px] border border-dashed border-white/20 bg-black/10 px-6 py-16 text-center">
+                  <p className="text-lg font-semibold text-white">{activationData.entity.title}</p>
+                  <p className="mt-3 text-sm text-blue-100/70">{activationData.entity.description}</p>
+                </div>
+              )}
+            </div>
+          </section>
 
-          {/* 唤醒交互区：进度条 + 唤醒按钮 */}
-          <motion.div
-            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: 'easeOut' }}
-          >
+          <section ref={setupRef} className="flex flex-col gap-8">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-blue-100/60">
+                  New Agent Setup
+                </p>
+                <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white">
+                  新建智能体并注入长期设定
+                </h2>
+              </div>
+              <ChevronDown className="hidden h-5 w-5 text-blue-100/50 md:block" />
+            </div>
+
+            <AgentConfigEditor draft={draft} onChange={setDraft} tone="dark" />
+
+            <GlassCard className="glass-card--dark">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-blue-100/60">初始化说明</p>
+                  <h3 className="mt-2 text-xl font-semibold text-white">唤醒后立即进入聊天页</h3>
+                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-blue-100/70">
+                    聊天页会先显示“正在生成智能体”，随后后台调用 DeepSeek 整理名字、关键词、情感参数、记忆碎片、世界书和角色卡，并把结果写回数据库长期保存。
+                  </p>
+                </div>
+                <div className="rounded-3xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-blue-100/80">
+                  当前已记录 {draft.memories.length} 条记忆
+                </div>
+              </div>
+            </GlassCard>
+
+            {error ? (
+              <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                {error}
+              </div>
+            ) : null}
+
             <ActivationTrigger
               progressLabel={activationData.trigger.progressLabel}
               progress={resonanceScore}
-              buttonLabel={activationData.trigger.buttonLabel}
-              awakened={isAwakened}
-              onActivate={handleActivate}
+              buttonLabel={creating ? '正在唤醒...' : activationData.trigger.buttonLabel}
+              awakened={creating}
+              onActivate={() => {
+                if (!creating) {
+                  void handleCreateAgent();
+                }
+              }}
             />
-          </motion.div>
+          </section>
         </main>
       </div>
     </div>
   );
 }
 
-// 解析关键词输入：支持 / 、 , 空格分隔
+function buildCreatePayload(draft: AgentEditorDraft): AgentConfigInput {
+  return {
+    name: draft.name,
+    keywords: parseKeywords(draft.keywordsInput),
+    emotionalTraits: draft.emotionalTraits,
+    memories: draft.memories,
+    worldbookText: draft.worldbookText,
+    worldbookFileName: draft.worldbookFileName || undefined,
+    characterCardText: draft.characterCardText,
+    characterCardFileName: draft.characterCardFileName || undefined,
+    avatarUrl: draft.memories.find((item) => item.imageUrl)?.imageUrl
+  };
+}
+
 function parseKeywords(value: string) {
   return value
-    .split(/[,，/\\s]+/g)
+    .split(/[,，/\s]+/g)
     .map((item) => item.trim())
     .filter(Boolean);
 }
