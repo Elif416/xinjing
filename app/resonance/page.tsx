@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion, type Transition } from 'framer-motion';
 import { MapPin, Navigation, Plus, Search, Sparkles, X } from 'lucide-react';
 
@@ -112,10 +112,22 @@ export default function ResonancePage() {
   const [locating, setLocating] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [formError, setFormError] = useState('');
+  const [mapReady, setMapReady] = useState(false);
+  const [mapError, setMapError] = useState('');
 
   const shouldReduceMotion = useReducedMotion();
   const addressInputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null);
+
+  const handleMapReady = useCallback(() => {
+    setMapReady(true);
+    setMapError('');
+  }, []);
+
+  const handleMapError = useCallback((message: string) => {
+    setMapReady(false);
+    setMapError(message);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -323,95 +335,107 @@ export default function ResonancePage() {
     </>
   );
 
+  const searchCard = (
+    <GlassCard className="glass-card--dark gap-4 border-white/10">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-blue-100/70">
+        <Sparkles className="h-3 w-3" />
+        共鸣检索
+      </div>
+      <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-blue-100/80">
+        <Search className="h-3.5 w-3.5 shrink-0 text-blue-200/70" />
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="搜索地点、记忆或关键词..."
+          className="w-full bg-transparent text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
+        />
+      </div>
+      <div className="text-xs text-blue-100/70">
+        {loadingPosts
+          ? '正在加载地图记忆...'
+          : `当前展示 ${filteredCount} / ${totalCount} 条共鸣记录`}
+      </div>
+    </GlassCard>
+  );
+
+  const statsCard = (
+    <GlassCard className="glass-card--dark w-full gap-3 border-white/10">
+      <p className="text-xs uppercase tracking-[0.2em] text-blue-100/60">Resonance Stats</p>
+      <p className="text-3xl font-semibold text-white">{totalCount}</p>
+      <p className="text-xs text-blue-100/70">{DEFAULT_STATS_LABEL}</p>
+    </GlassCard>
+  );
+
   return (
     <div className="min-h-screen text-slate-100">
       <div className="page-bg resonance-bg">
         <GlassNavbar brand={resonanceBrand} items={resonanceNavItems} />
 
-        <main className="mx-auto flex w-full max-w-6xl flex-col gap-12 px-6 py-16">
-          <section className="relative">
-            <div className="relative min-h-[560px] overflow-hidden rounded-[36px] border border-white/10 bg-[#0a1024]/70 shadow-[0_40px_120px_rgba(6,10,25,0.55)] backdrop-blur-[10px]">
-              <div className="absolute inset-0">
-                <ResonanceMap posts={filteredPosts} focus={focus} onSelect={setSelectedPost} />
-              </div>
-              <div className="resonance-map-overlay absolute inset-0" />
-
-              <div className="absolute bottom-8 left-8 z-10">
-                <p className="text-xs uppercase tracking-[0.3em] text-blue-200/70">Resonance Map</p>
-                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                  时空共鸣 · 集体记忆地图
-                </h1>
-                <p className="mt-3 max-w-xl text-sm leading-relaxed text-blue-100/70">
-                  使用低精度现实地图呈现每一段记忆坐标，让共鸣停留在镇级尺度之上。
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <div ref={formRef} className="flex flex-col gap-4 md:hidden">
-            <GlassCard className="glass-card--dark gap-4 border-white/10">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-blue-100/70">
-                <Sparkles className="h-3 w-3" />
-                共鸣检索
-              </div>
-              <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-blue-100/80">
-                <Search className="h-3.5 w-3.5 text-blue-200/70" />
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="搜索地点、记忆或关键词..."
-                  className="w-full bg-transparent text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
-                />
-              </div>
-              <div className="text-xs text-blue-100/70">
-                {loadingPosts
-                  ? '正在加载地图记忆...'
-                  : `当前展示 ${filteredCount} / ${totalCount} 条共鸣记录`}
-              </div>
-            </GlassCard>
-
-            <GlassCard className="glass-card--dark gap-4 border-white/10">{formBody}</GlassCard>
-          </div>
-
+        <main className="mx-auto w-full max-w-[1440px] px-6 py-12">
           {loadError ? (
-            <GlassCard className="glass-card--dark border-red-500/40 text-red-100">
+            <GlassCard className="glass-card--dark mb-6 border-red-500/40 text-red-100">
               {loadError}
             </GlassCard>
           ) : null}
+
+          <section className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+            <aside
+              ref={formRef}
+              className="order-2 flex flex-col gap-4 xl:order-1 xl:sticky xl:top-28 xl:self-start"
+            >
+              {searchCard}
+              <GlassCard className="glass-card--dark gap-4 border-white/10">{formBody}</GlassCard>
+              <div className="xl:hidden">{statsCard}</div>
+            </aside>
+
+            <section className="order-1 xl:order-2">
+              <div className="relative min-h-[620px] overflow-hidden rounded-[36px] border border-white/10 bg-[#0a1024]/80 shadow-[0_40px_120px_rgba(6,10,25,0.55)] backdrop-blur-[10px] sm:min-h-[720px]">
+                <div className="absolute inset-0">
+                  <ResonanceMap
+                    posts={filteredPosts}
+                    focus={focus}
+                    onSelect={setSelectedPost}
+                    onReady={handleMapReady}
+                    onError={handleMapError}
+                  />
+                </div>
+                <div className="resonance-map-overlay absolute inset-0 z-[1]" />
+                <div className="absolute inset-x-0 bottom-0 z-[2] h-56 bg-gradient-to-t from-[#040817] via-[#040817]/80 to-transparent" />
+
+                <div className="absolute left-6 top-6 z-[3] flex max-w-lg flex-col gap-3">
+                  {mapError ? (
+                    <GlassCard className="glass-card--dark border-amber-400/30 bg-[#071226]/85 text-amber-100">
+                      <p className="text-sm font-semibold text-white">地图服务初始化失败</p>
+                      <p className="mt-2 text-sm leading-relaxed text-blue-100/80">{mapError}</p>
+                      <p className="mt-3 text-xs text-blue-100/60">
+                        请检查高德 Key、安全密钥以及当前访问域名是否在白名单中。
+                      </p>
+                    </GlassCard>
+                  ) : !mapReady ? (
+                    <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-[#071226]/80 px-4 py-2 text-xs text-blue-100/80 backdrop-blur-[18px]">
+                      <Navigation className="h-3.5 w-3.5 text-blue-200/70" />
+                      地图服务连接中...
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="absolute right-6 top-6 z-[3] hidden w-56 md:block">{statsCard}</div>
+
+                <div className="absolute bottom-8 left-6 right-6 z-[3] max-w-2xl">
+                  <p className="text-xs uppercase tracking-[0.3em] text-blue-200/70">
+                    Resonance Map
+                  </p>
+                  <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">
+                    时空共鸣 · 集体记忆地图
+                  </h1>
+                  <p className="mt-3 max-w-xl text-sm leading-relaxed text-blue-100/70 md:text-base">
+                    使用低精度现实地图呈现每一段记忆坐标，让共鸣停留在镇级尺度之上。
+                  </p>
+                </div>
+              </div>
+            </section>
+          </section>
         </main>
-
-        <aside className="fixed left-6 top-24 z-40 hidden w-80 flex-col gap-4 md:flex">
-          <GlassCard className="glass-card--dark gap-4 border-white/10">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-blue-100/70">
-              <Sparkles className="h-3 w-3" />
-              共鸣检索
-            </div>
-            <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-blue-100/80">
-              <Search className="h-3.5 w-3.5 text-blue-200/70" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="搜索地点、记忆或关键词..."
-                className="w-full bg-transparent text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
-              />
-            </div>
-            <div className="text-xs text-blue-100/70">
-              {loadingPosts
-                ? '正在加载地图记忆...'
-                : `当前展示 ${filteredCount} / ${totalCount} 条共鸣记录`}
-            </div>
-          </GlassCard>
-
-          <GlassCard className="glass-card--dark gap-4 border-white/10">{formBody}</GlassCard>
-        </aside>
-
-        <aside className="fixed bottom-24 right-6 z-40 hidden md:block">
-          <GlassCard className="glass-card--dark w-56 gap-3 border-white/10">
-            <p className="text-xs uppercase tracking-[0.2em] text-blue-100/60">Resonance Stats</p>
-            <p className="text-2xl font-semibold text-white">{totalCount}</p>
-            <p className="text-xs text-blue-100/70">{DEFAULT_STATS_LABEL}</p>
-          </GlassCard>
-        </aside>
 
         <button
           type="button"
@@ -419,7 +443,7 @@ export default function ResonancePage() {
             formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             addressInputRef.current?.focus();
           }}
-          className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full bg-gradient-to-r from-blue-500 via-blue-400 to-indigo-400 px-8 py-3 text-sm font-semibold text-white shadow-[0_20px_60px_rgba(59,130,246,0.45)] transition hover:scale-[1.01]"
+          className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full bg-gradient-to-r from-blue-500 via-blue-400 to-indigo-400 px-8 py-3 text-sm font-semibold text-white shadow-[0_20px_60px_rgba(59,130,246,0.45)] transition hover:scale-[1.01] xl:hidden"
         >
           <Plus className="h-4 w-4" />
           + 添加我的记忆坐标

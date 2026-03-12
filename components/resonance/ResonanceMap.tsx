@@ -15,6 +15,8 @@ type ResonanceMapProps = {
   posts: ResonancePost[];
   focus?: MapFocus | null;
   onSelect?: (post: ResonancePost) => void;
+  onReady?: () => void;
+  onError?: (message: string) => void;
 };
 
 const AMAP_PLUGINS = ['AMap.Scale', 'AMap.Geocoder'];
@@ -22,11 +24,12 @@ const DEFAULT_CENTER: [number, number] = [104.1954, 35.8617];
 const DEFAULT_ZOOM = 4;
 const FOCUS_ZOOM = 11;
 
-export function ResonanceMap({ posts, focus, onSelect }: ResonanceMapProps) {
+export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: ResonanceMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const previewRef = useRef<any>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   useEffect(() => {
     let disposed = false;
@@ -46,20 +49,31 @@ export function ResonanceMap({ posts, focus, onSelect }: ResonanceMapProps) {
           zoom: DEFAULT_ZOOM,
           zooms: [3, 12],
           center: DEFAULT_CENTER,
-          mapStyle: 'amap://styles/whitesmoke',
-          features: ['bg', 'road', 'point'],
+          mapStyle: 'amap://styles/darkblue',
+          features: ['bg', 'road', 'building', 'point'],
           pitchEnable: false,
-          rotateEnable: false
+          rotateEnable: false,
+          resizeEnable: true
         });
 
         map.addControl(new AMap.Scale());
         mapRef.current = map;
+        onReady?.();
 
         requestAnimationFrame(() => {
           map.resize();
         });
-      } catch {
-        // Swallow errors here; UI will show missing key or network error elsewhere.
+
+        if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+          resizeObserverRef.current = new ResizeObserver(() => {
+            map.resize();
+          });
+          resizeObserverRef.current.observe(containerRef.current);
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : '高德地图初始化失败，请检查 Key 与安全密钥配置。';
+        onError?.(message);
       }
     }
 
@@ -67,12 +81,14 @@ export function ResonanceMap({ posts, focus, onSelect }: ResonanceMapProps) {
 
     return () => {
       disposed = true;
+      resizeObserverRef.current?.disconnect();
+      resizeObserverRef.current = null;
       if (mapRef.current) {
         mapRef.current.destroy();
         mapRef.current = null;
       }
     };
-  }, []);
+  }, [onError, onReady]);
 
   useEffect(() => {
     const map = mapRef.current;
