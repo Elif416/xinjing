@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion, type Transition } from 'framer-motion';
 import { Plus, Search, Sparkles, X } from 'lucide-react';
 
 import { GlassCard } from '@/components/GlassCard';
@@ -20,6 +20,42 @@ export type ResonancePinData = {
   text: string;
   image: string;
 };
+
+function isResonancePinColor(value: unknown): value is ResonancePinColor {
+  return value === 'warm' || value === 'cool' || value === 'calm';
+}
+
+function parseResonancePins(value: unknown): ResonancePinData[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const pins: ResonancePinData[] = [];
+
+  for (const item of value) {
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+
+    const record = item as Record<string, unknown>;
+    if (!isResonancePinColor(record.color)) {
+      continue;
+    }
+
+    pins.push({
+      id: typeof record.id === 'string' ? record.id : `pin-${pins.length + 1}`,
+      x: Number(record.x) || 0,
+      y: Number(record.y) || 0,
+      color: record.color,
+      delay: Number.isFinite(Number(record.delay)) ? Number(record.delay) : undefined,
+      title: typeof record.title === 'string' ? record.title : '',
+      text: typeof record.text === 'string' ? record.text : '',
+      image: typeof record.image === 'string' ? record.image : ''
+    });
+  }
+
+  return pins;
+}
 
 type ResonanceFilterOption = {
   id: ResonancePinColor;
@@ -55,9 +91,7 @@ export default function ResonancePage() {
     })
   );
 
-  const resonancePins: ResonancePinData[] = Array.isArray(resonanceData.pins)
-    ? resonanceData.pins
-    : [];
+  const resonancePins = useMemo(() => parseResonancePins(resonanceData.pins), []);
 
   const resonanceStatsBase = resonanceData.stats?.base ?? 1423012;
   const resonanceStatsLabel = resonanceData.stats?.label ?? '当前共鸣记忆';
@@ -114,9 +148,9 @@ export default function ResonancePage() {
     return new Intl.NumberFormat('zh-CN').format(resonanceCount);
   }, [resonanceCount]);
 
-  const modalTransition = (shouldReduceMotion
+  const modalTransition: Transition = shouldReduceMotion
     ? { duration: 0 }
-    : { type: 'spring', damping: 26, stiffness: 240 }) as const;
+    : { type: 'spring', damping: 26, stiffness: 240 };
 
   const selectedIsInjected = resonanceSelected
     ? Boolean(resonanceInjected[resonanceSelected.id])

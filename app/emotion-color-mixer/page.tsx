@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, type CSSProperties } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { useReducedMotion } from 'framer-motion';
 
 import { GlassNavbar } from '@/components/GlassNavbar';
 import homeData from '@/data/home.json';
@@ -139,7 +139,7 @@ export default function EmotionColorMixerPage() {
     };
   }, [joy, melancholy, serenity]);
 
-  const gradientVars = useMemo(() => {
+  const gradientStyle = useMemo(() => {
     const joyAlpha = 0.18 + (joy / 100) * 0.52;
     const melancholyAlpha = 0.18 + (melancholy / 100) * 0.52;
     const serenityAlpha = 0.18 + (serenity / 100) * 0.52;
@@ -156,9 +156,10 @@ export default function EmotionColorMixerPage() {
       '--ser-x': `${40 + serenity * 0.25}%`,
       '--ser-y': `${76 - serenity * 0.22}%`,
       '--ser-size': `${50 + serenity * 0.28}%`,
-      '--ser-color': rgbaFromHex(swatches.serenity, serenityAlpha)
+      '--ser-color': rgbaFromHex(swatches.serenity, serenityAlpha),
+      transition: shouldReduceMotion ? 'none' : 'all 420ms ease'
     } as CSSProperties;
-  }, [joy, melancholy, serenity, swatches]);
+  }, [joy, melancholy, serenity, shouldReduceMotion, swatches]);
 
   const dominantEmotion = useMemo<EmotionKey>(() => {
     const entries: Array<[EmotionKey, number]> = [
@@ -169,10 +170,6 @@ export default function EmotionColorMixerPage() {
     entries.sort((a, b) => b[1] - a[1]);
     return entries[0][0];
   }, [joy, melancholy, serenity]);
-
-  const gradientTransition = (shouldReduceMotion
-    ? { duration: 0 }
-    : { type: 'spring', stiffness: 120, damping: 22 }) as const;
 
   return (
     <div className="min-h-screen bg-white text-ink">
@@ -193,11 +190,9 @@ export default function EmotionColorMixerPage() {
 
         <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="relative overflow-hidden rounded-[32px] border border-white/40 bg-white/55 p-6 shadow-[0_30px_80px_rgba(15,23,42,0.12)] backdrop-blur-[32px] md:p-10">
-            <motion.div
+            <div
               className="fluid-canvas"
-              animate={gradientVars}
-              transition={gradientTransition}
-              initial={false}
+              style={gradientStyle}
             />
             <div className="relative z-10 flex h-[320px] flex-col justify-end md:h-[420px]">
               <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/50 bg-white/70 px-4 py-1 text-xs text-slate-600 shadow-sm backdrop-blur-[12px]">

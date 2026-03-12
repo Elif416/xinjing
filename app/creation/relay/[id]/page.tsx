@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, type Transition } from 'framer-motion';
 import { ChevronDown, ChevronLeft, Heart, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -58,9 +58,9 @@ export default function RelayStoryPage() {
 
   const revealInitial = shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 };
   const revealWhile = { opacity: 1, y: 0 };
-  const revealTransition = (shouldReduceMotion
+  const revealTransition: Transition = shouldReduceMotion
     ? { duration: 0 }
-    : { duration: 0.6, ease: 'easeOut' }) as const;
+    : { duration: 0.6, ease: 'easeOut' };
 
   if (!relayStory) {
     return (

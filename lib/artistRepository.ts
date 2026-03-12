@@ -25,7 +25,7 @@ type ArtistRecord = {
   completedorders: number | null;
   rating: number | null;
   activitylevel: number | null;
-  users: ArtistUserRecord;
+  users: ArtistUserRecord | ArtistUserRecord[];
 };
 
 type AttachmentRecord = {
@@ -292,7 +292,8 @@ function pickPrimaryAttachment(attachments: AttachmentRecord[] | null | undefine
 }
 
 function resolveArtistName(artist: ArtistRecord) {
-  return artist.users.nickname?.trim() || artist.users.account?.trim() || `Artist ${artist.artistid}`;
+  const user = Array.isArray(artist.users) ? artist.users[0] : artist.users;
+  return user?.nickname?.trim() || user?.account?.trim() || `Artist ${artist.artistid}`;
 }
 
 function parseKeywords(raw: string | null | undefined) {

@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion, type Transition } from 'framer-motion';
 import { Plus, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import Link from 'next/link';
 
@@ -103,9 +103,9 @@ export default function CreationPage() {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [creationModal]);
 
-  const modalTransition = (shouldReduceMotion
+  const modalTransition: Transition = shouldReduceMotion
     ? { duration: 0 }
-    : { type: 'spring', damping: 26, stiffness: 260 }) as const;
+    : { type: 'spring', damping: 26, stiffness: 260 };
 
   const buildArtistsQuery = useCallback(
     (offset: number) => {

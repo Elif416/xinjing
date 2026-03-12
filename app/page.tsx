@@ -4,6 +4,20 @@ import { GlassNavbar } from '../components/GlassNavbar';
 import { CardBody, CardContainer, CardItem } from '../components/ui/3d-card';
 import homeData from '../data/home.json';
 
+type HomeLoopSection = {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  align: string;
+  href: string;
+  tag?: string;
+  addon?: {
+    title: string;
+    description: string;
+  };
+};
+
 export default function Home() {
   // 统一从 JSON 读取数据，避免硬编码，便于后续替换数据源
   const brand = homeData.brand ?? {
@@ -24,7 +38,9 @@ export default function Home() {
   const creationSection = homeData.creation;
   const activationSection = homeData.activation;
   const resonanceSection = homeData.resonance;
-  const loopSections = [creationSection, activationSection, resonanceSection].filter(Boolean);
+  const loopSections = [creationSection, activationSection, resonanceSection].filter(
+    (section): section is HomeLoopSection => Boolean(section)
+  );
 
   const commerce = homeData.commerce ?? { id: 'workshop', items: [] };
   const footer = homeData.footer ?? { copyright: '' };

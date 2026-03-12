@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion, type Transition } from 'framer-motion';
 import { Calendar, ChevronLeft, ChevronRight, UploadCloud, X } from 'lucide-react';
 
 export type CommissionFormValue = {
@@ -29,9 +29,9 @@ export function CommissionFormModal({ open, onClose, onSubmit }: CommissionFormM
   const [deadline, setDeadline] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const modalTransition = (shouldReduceMotion
+  const modalTransition: Transition = shouldReduceMotion
     ? { duration: 0 }
-    : { type: 'spring', damping: 26, stiffness: 260 }) as const;
+    : { type: 'spring', damping: 26, stiffness: 260 };
 
   const currentStepLabel = useMemo(() => {
     if (step === 1) return '定义情感';
