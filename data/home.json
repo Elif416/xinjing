@@ -6,19 +6,19 @@
   },
   "nav": [
     {
-      "label": "灵感创造",
+      "label": "心境 绘",
       "href": "#creation"
     },
     {
-      "label": "灵魂活化",
+      "label": "心境 伴",
       "href": "/activation"
     },
     {
-      "label": "时空共鸣",
+      "label": "心境 镜",
       "href": "#resonance"
     },
     {
-      "label": "实体工坊",
+      "label": "心境 物",
       "href": "#workshop"
     },
     {
@@ -52,18 +52,18 @@
   },
   "creation": {
     "id": "creation",
-    "title": "【创造】数字艺术定制",
+    "title": "【心镜 绘】数字艺术定制",
     "description": "将自我投射与理想场景转化为独特画作，打造可被珍藏的情感资产。",
-    "image": "/mock-dream.svg",
+    "image": "/pic/hui.png",
     "align": "left",
     "tag": "接力绘画小说",
     "href": "/creation"
   },
   "activation": {
     "id": "activation",
-    "title": "【活化】AI 情感引擎",
+    "title": "【心镜 伴】AI 情感引擎",
     "description": "深度整合图像、语音与 NLP，基于你的碎片化记忆数据，唤醒专属的成长性陪伴。",
-    "image": "/mock-soul.svg",
+    "image": "/pic/ban.png",
     "align": "right",
     "addon": {
       "title": "接力绘画小说",
@@ -73,9 +73,9 @@
   },
   "resonance": {
     "id": "resonance",
-    "title": "【共鸣】集体记忆地图",
+    "title": "【心镜 镜】集体记忆地图",
     "description": "结合 UGC 与地理坐标，构建沉浸式数字家园，形成跨时空的温暖共鸣。",
-    "image": "/mock-map.svg",
+    "image": "/pic/jing.png",
     "align": "left",
     "href": "/resonance"
   },
@@ -83,9 +83,9 @@
     "id": "workshop",
     "items": [
       {
-        "title": "可印刷的情感密码",
+        "title": "心镜 物",
         "description": "将数字情感延伸至实体纪念品，打通线上线下体验。",
-        "image": "/mock-merch.svg",
+        "image": "/pic/wu.png",
         "href": "/workshop"
       },
       {

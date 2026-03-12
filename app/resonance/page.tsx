@@ -1,175 +1,304 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion, type Transition } from 'framer-motion';
-import { Plus, Search, Sparkles, X } from 'lucide-react';
+import { MapPin, Navigation, Plus, Search, Sparkles, X } from 'lucide-react';
 
 import { GlassCard } from '@/components/GlassCard';
 import { GlassNavbar } from '@/components/GlassNavbar';
-import { ResonancePin, type ResonancePinColor } from '@/components/resonance/ResonancePin';
+import { loadAmap } from '@/components/resonance/amap';
+import { ResonanceMap } from '@/components/resonance/ResonanceMap';
 import homeData from '@/data/home.json';
-import resonanceData from '@/data/resonance.json';
+import type { ResonancePost } from '@/lib/resonanceTypes';
 
-export type ResonancePinData = {
-  id: string;
-  x: number;
-  y: number;
-  color: ResonancePinColor;
-  delay?: number;
-  title: string;
-  text: string;
-  image: string;
-};
-
-function isResonancePinColor(value: unknown): value is ResonancePinColor {
-  return value === 'warm' || value === 'cool' || value === 'calm';
-}
-
-function parseResonancePins(value: unknown): ResonancePinData[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  const pins: ResonancePinData[] = [];
-
-  for (const item of value) {
-    if (!item || typeof item !== 'object') {
-      continue;
-    }
-
-    const record = item as Record<string, unknown>;
-    if (!isResonancePinColor(record.color)) {
-      continue;
-    }
-
-    pins.push({
-      id: typeof record.id === 'string' ? record.id : `pin-${pins.length + 1}`,
-      x: Number(record.x) || 0,
-      y: Number(record.y) || 0,
-      color: record.color,
-      delay: Number.isFinite(Number(record.delay)) ? Number(record.delay) : undefined,
-      title: typeof record.title === 'string' ? record.title : '',
-      text: typeof record.text === 'string' ? record.text : '',
-      image: typeof record.image === 'string' ? record.image : ''
-    });
-  }
-
-  return pins;
-}
-
-type ResonanceFilterOption = {
-  id: ResonancePinColor;
+type GeoResult = {
+  address: string;
+  township: string;
   label: string;
-  swatch: string;
+  lng: number;
+  lat: number;
 };
 
-const resonanceFilters: ResonanceFilterOption[] = [
-  {
-    id: 'warm',
-    label: '欢愉',
-    swatch: 'bg-amber-300'
-  },
-  {
-    id: 'cool',
-    label: '忧郁',
-    swatch: 'bg-blue-400'
-  },
-  {
-    id: 'calm',
-    label: '宁静',
-    swatch: 'bg-purple-400'
+const AMAP_PLUGINS = ['AMap.Geocoder', 'AMap.Scale'];
+const DEFAULT_STATS_LABEL = '???????';
+
+function roundCoord(value: number, decimals = 3) {
+  const factor = Math.pow(10, decimals);
+  return Math.round(value * factor) / factor;
+}
+
+function extractLocationValue(value: unknown) {
+  if (typeof value === 'string') {
+    return value.trim();
   }
-];
+  return '';
+}
+
+async function geocodeAddress(address: string): Promise<GeoResult> {
+  const key = process.env.NEXT_PUBLIC_AMAP_KEY ?? '';
+  const security = process.env.NEXT_PUBLIC_AMAP_SECURITY_CODE ?? '';
+  const AMap = (await loadAmap({ key, security, plugins: AMAP_PLUGINS })) as any;
+
+  const geocoder = new AMap.Geocoder({
+    extensions: 'all'
+  });
+
+  return new Promise((resolve, reject) => {
+    geocoder.getLocation(address, (status: string, result: any) => {
+      if (status !== 'complete' || !result?.geocodes?.length) {
+        reject(new Error('?????????????????/?????'));
+        return;
+      }
+
+      const geo = result.geocodes[0];
+      const location = geo.location;
+      const lng = roundCoord(
+        typeof location?.getLng === 'function' ? location.getLng() : Number(location?.lng)
+      );
+      const lat = roundCoord(
+        typeof location?.getLat === 'function' ? location.getLat() : Number(location?.lat)
+      );
+
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+        reject(new Error('???????????????'));
+        return;
+      }
+
+      const component = geo.addressComponent ?? {};
+      const province = extractLocationValue(component.province);
+      const city = extractLocationValue(component.city || component.province);
+      const district = extractLocationValue(component.district);
+      const township = extractLocationValue(component.township || component.towncode || component.street);
+
+      const label = [province, city, district, township].filter(Boolean).join('') || geo.formattedAddress || address;
+
+      resolve({
+        address: geo.formattedAddress || address,
+        township: township || district,
+        label,
+        lng,
+        lat
+      });
+    });
+  });
+}
 
 export default function ResonancePage() {
-  // 复用首页品牌与导航结构，保持信息架构一致
-  const resonanceBrand = homeData.brand ?? { name: '心镜', en: 'HeartMirror' };
-  const resonanceNavItems = (Array.isArray(homeData.nav) ? homeData.nav : []).map(
-    (item) => ({
-      ...item,
-      href: item.href.startsWith('#') ? `/${item.href}` : item.href
-    })
-  );
+  const resonanceBrand = homeData.brand ?? { name: '??', en: 'HeartMirror' };
+  const resonanceNavItems = (Array.isArray(homeData.nav) ? homeData.nav : []).map((item) => ({
+    ...item,
+    href: item.href.startsWith('#') ? `/${item.href}` : item.href
+  }));
 
-  const resonancePins = useMemo(() => parseResonancePins(resonanceData.pins), []);
+  const [posts, setPosts] = useState<ResonancePost[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [selectedPost, setSelectedPost] = useState<ResonancePost | null>(null);
+  const [query, setQuery] = useState('');
 
-  const resonanceStatsBase = resonanceData.stats?.base ?? 1423012;
-  const resonanceStatsLabel = resonanceData.stats?.label ?? '当前共鸣记忆';
-  const resonanceSearchPlaceholder =
-    resonanceData.searchPlaceholder ?? '搜寻那个让你共鸣的情感频段...';
-
-  const [resonanceQuery, setResonanceQuery] = useState('');
-  const [resonanceFilter, setResonanceFilter] = useState<ResonancePinColor | null>(null);
-  const [resonanceSelected, setResonanceSelected] = useState<ResonancePinData | null>(null);
-  const [resonanceInjected, setResonanceInjected] = useState<Record<string, boolean>>({});
-  const [resonanceCount, setResonanceCount] = useState(resonanceStatsBase);
+  const [addressInput, setAddressInput] = useState('');
+  const [titleInput, setTitleInput] = useState('');
+  const [contentInput, setContentInput] = useState('');
+  const [geoResult, setGeoResult] = useState<GeoResult | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const shouldReduceMotion = useReducedMotion();
-
-  // 数字跳动动画：仅在客户端定时更新，避免复杂计算
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setResonanceCount((prev) => prev + Math.floor(Math.random() * 18) + 6);
-    }, 3200);
-
-    return () => window.clearInterval(timer);
-  }, []);
+  const addressInputRef = useRef<HTMLInputElement | null>(null);
+  const formRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!resonanceSelected) {
-      return;
+    let cancelled = false;
+
+    async function loadPosts() {
+      setLoadingPosts(true);
+      setLoadError('');
+
+      try {
+        const response = await fetch('/api/resonance/posts', { cache: 'no-store' });
+        if (!response.ok) {
+          const payload = (await response.json()) as { error?: string };
+          throw new Error(payload.error || '??????????');
+        }
+
+        const payload = (await response.json()) as { items?: ResonancePost[] };
+        if (!cancelled) {
+          setPosts(payload.items ?? []);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setLoadError(error instanceof Error ? error.message : '??????????');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingPosts(false);
+        }
+      }
     }
 
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setResonanceSelected(null);
-      }
+    void loadPosts();
+
+    return () => {
+      cancelled = true;
     };
+  }, []);
 
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [resonanceSelected]);
+  const filteredPosts = useMemo(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) {
+      return posts;
+    }
 
-  const resonanceFilteredPins = useMemo(() => {
-    const query = resonanceQuery.trim().toLowerCase();
-    return resonancePins.filter((pin) => {
-      if (resonanceFilter && pin.color !== resonanceFilter) {
-        return false;
-      }
-      if (!query) {
-        return true;
-      }
-      const content = `${pin.title} ${pin.text}`.toLowerCase();
-      return content.includes(query);
+    return posts.filter((post) => {
+      const content = `${post.title} ${post.content} ${post.address} ${post.township}`.toLowerCase();
+      return content.includes(trimmed);
     });
-  }, [resonancePins, resonanceFilter, resonanceQuery]);
+  }, [posts, query]);
 
-  const formattedCount = useMemo(() => {
-    return new Intl.NumberFormat('zh-CN').format(resonanceCount);
-  }, [resonanceCount]);
+  const totalCount = posts.length;
+  const filteredCount = filteredPosts.length;
 
   const modalTransition: Transition = shouldReduceMotion
     ? { duration: 0 }
     : { type: 'spring', damping: 26, stiffness: 240 };
 
-  const selectedIsInjected = resonanceSelected
-    ? Boolean(resonanceInjected[resonanceSelected.id])
-    : false;
-
-  const handleResonanceInject = () => {
-    if (!resonanceSelected) {
+  const handleLocate = async () => {
+    const input = addressInput.trim();
+    if (!input) {
+      setFormError('????????/?????');
       return;
     }
 
-    setResonanceInjected((prev) => ({
-      ...prev,
-      [resonanceSelected.id]: true
-    }));
+    setFormError('');
+    setLocating(true);
 
-    if (!resonanceInjected[resonanceSelected.id]) {
-      setResonanceCount((prev) => prev + 1);
+    try {
+      const result = await geocodeAddress(input);
+      setGeoResult(result);
+    } catch (error) {
+      setGeoResult(null);
+      setFormError(error instanceof Error ? error.message : '???????????');
+    } finally {
+      setLocating(false);
     }
   };
+
+  const handlePublish = async () => {
+    if (!geoResult) {
+      setFormError('???????????????');
+      return;
+    }
+
+    if (!contentInput.trim()) {
+      setFormError('????????????');
+      return;
+    }
+
+    setFormError('');
+    setPublishing(true);
+
+    try {
+      const response = await fetch('/api/resonance/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: titleInput.trim(),
+          content: contentInput.trim(),
+          address: geoResult.address,
+          township: geoResult.township,
+          lng: geoResult.lng,
+          lat: geoResult.lat
+        })
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: string };
+        throw new Error(payload.error || '???????????');
+      }
+
+      const created = (await response.json()) as ResonancePost;
+      setPosts((prev) => [created, ...prev]);
+      setSelectedPost(created);
+      setTitleInput('');
+      setContentInput('');
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : '???????????');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const focus = geoResult ? { lng: geoResult.lng, lat: geoResult.lat, label: geoResult.label } : null;
+
+  const formBody = (
+    <>
+      <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-blue-100/70">
+        <MapPin className="h-3 w-3" />
+        发布记忆坐标
+      </div>
+
+      <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-blue-100/80">
+        <input
+          ref={addressInputRef}
+          value={addressInput}
+          onChange={(event) => {
+            setAddressInput(event.target.value);
+            if (geoResult) {
+              setGeoResult(null);
+            }
+          }}
+          placeholder="输入精确到镇的地址"
+          className="w-full bg-transparent text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={handleLocate}
+          className="flex items-center gap-1 rounded-full border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-blue-100/80 transition hover:border-white/40"
+          disabled={locating}
+        >
+          <Navigation className="h-3 w-3" />
+          {locating ? '定位中' : '定位'}
+        </button>
+      </div>
+
+      {geoResult ? (
+        <p className="text-xs text-blue-100/70">
+          已定位：{geoResult.label}（坐标已降精度到镇级）
+        </p>
+      ) : (
+        <p className="text-xs text-blue-100/60">请先定位地址，地图将自动移动到该镇。</p>
+      )}
+
+      <input
+        value={titleInput}
+        onChange={(event) => setTitleInput(event.target.value)}
+        placeholder="记忆标题（可选）"
+        className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
+      />
+
+      <textarea
+        value={contentInput}
+        onChange={(event) => setContentInput(event.target.value)}
+        placeholder="写下想贴在地图上的记忆片段..."
+        rows={4}
+        className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
+      />
+
+      {formError ? <p className="text-xs text-red-200">{formError}</p> : null}
+
+      <button
+        type="button"
+        onClick={handlePublish}
+        disabled={publishing}
+        className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-500 via-blue-400 to-indigo-400 px-4 py-3 text-xs font-semibold text-white shadow-[0_16px_40px_rgba(59,130,246,0.35)] transition hover:scale-[1.01] disabled:opacity-60"
+      >
+        {publishing ? '发布中...' : '发布到地图'}
+      </button>
+    </>
+  );
 
   return (
     <div className="min-h-screen text-slate-100">
@@ -177,124 +306,117 @@ export default function ResonancePage() {
         <GlassNavbar brand={resonanceBrand} items={resonanceNavItems} />
 
         <main className="mx-auto flex w-full max-w-6xl flex-col gap-12 px-6 py-16">
-          {/* 全屏底图：抽象点阵世界地图作为情感共鸣底座 */}
           <section className="relative">
-            <div className="relative min-h-[520px] overflow-hidden rounded-[36px] border border-white/10 bg-[#0a1024]/70 shadow-[0_40px_120px_rgba(6,10,25,0.55)] backdrop-blur-[10px]">
-              <img
-                src="/mock-world.svg"
-                alt="共鸣地图底图"
-                className="absolute inset-0 h-full w-full object-cover opacity-70"
-                loading="lazy"
-                decoding="async"
-              />
+            <div className="relative min-h-[560px] overflow-hidden rounded-[36px] border border-white/10 bg-[#0a1024]/70 shadow-[0_40px_120px_rgba(6,10,25,0.55)] backdrop-blur-[10px]">
+              <div className="absolute inset-0">
+                <ResonanceMap posts={filteredPosts} focus={focus} onSelect={setSelectedPost} />
+              </div>
               <div className="resonance-map-overlay absolute inset-0" />
 
-              {/* 发光点层：使用绝对定位 + transform 动画，避免高成本计算 */}
-              <div className="absolute inset-0">
-                {resonanceFilteredPins.map((pin) => (
-                  <ResonancePin
-                    key={pin.id}
-                    id={pin.id}
-                    x={pin.x}
-                    y={pin.y}
-                    color={pin.color}
-                    delay={pin.delay}
-                    label={pin.title}
-                    onSelect={() => setResonanceSelected(pin)}
-                  />
-                ))}
-              </div>
-
-              <div className="absolute bottom-8 left-8">
-                <p className="text-xs uppercase tracking-[0.3em] text-blue-200/70">
-                  Resonance Map
-                </p>
+              <div className="absolute bottom-8 left-8 z-10">
+                <p className="text-xs uppercase tracking-[0.3em] text-blue-200/70">Resonance Map</p>
                 <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                  时空共鸣 · 集体记忆地图
+                  ???? ? ??????
                 </h1>
                 <p className="mt-3 max-w-xl text-sm leading-relaxed text-blue-100/70">
-                  让被隐藏的情感在夜空中相遇，构建一张柔软却可追溯的共鸣网络。
+                  ????????????????????????????????
                 </p>
               </div>
             </div>
           </section>
+
+          <div ref={formRef} className="flex flex-col gap-4 md:hidden">
+            <GlassCard className="glass-card--dark gap-4 border-white/10">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-blue-100/70">
+                <Sparkles className="h-3 w-3" />
+                共鸣检索
+              </div>
+              <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-blue-100/80">
+                <Search className="h-3.5 w-3.5 text-blue-200/70" />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="搜索地点、记忆或关键词..."
+                  className="w-full bg-transparent text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
+                />
+              </div>
+              <div className="text-xs text-blue-100/70">
+                {loadingPosts
+                  ? '正在加载地图记忆...'
+                  : `当前展示 ${filteredCount} / ${totalCount} 条共鸣记录`}
+              </div>
+            </GlassCard>
+
+            <GlassCard className="glass-card--dark gap-4 border-white/10">{formBody}</GlassCard>
+          </div>
+
+          {loadError ? (
+            <GlassCard className="glass-card--dark border-red-500/40 text-red-100">
+              {loadError}
+            </GlassCard>
+          ) : null}
         </main>
 
-        {/* 左上角 Floating HUD：搜索与情感色带过滤 */}
-        <aside className="fixed left-6 top-24 z-40 hidden w-72 flex-col gap-4 md:flex">
+        <aside className="fixed left-6 top-24 z-40 hidden w-80 flex-col gap-4 md:flex">
           <GlassCard className="glass-card--dark gap-4 border-white/10">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-blue-100/70">
               <Sparkles className="h-3 w-3" />
-              情感频段
+              ????
             </div>
             <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-blue-100/80">
               <Search className="h-3.5 w-3.5 text-blue-200/70" />
               <input
-                value={resonanceQuery}
-                onChange={(event) => setResonanceQuery(event.target.value)}
-                placeholder={resonanceSearchPlaceholder}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="???????????..."
                 className="w-full bg-transparent text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
               />
             </div>
-            <div className="flex items-center gap-2">
-              {resonanceFilters.map((filter) => (
-                <button
-                  key={filter.id}
-                  type="button"
-                  onClick={() =>
-                    setResonanceFilter((prev) => (prev === filter.id ? null : filter.id))
-                  }
-                  className={`flex h-8 w-8 items-center justify-center rounded-full border text-[10px] uppercase tracking-[0.2em] text-blue-100/80 transition ${
-                    resonanceFilter === filter.id
-                      ? 'border-white/60 bg-white/20'
-                      : 'border-white/20 bg-white/5 hover:border-white/40'
-                  }`}
-                  aria-pressed={resonanceFilter === filter.id}
-                  aria-label={filter.label}
-                >
-                  <span className={`h-3 w-3 rounded-full ${filter.swatch}`} />
-                </button>
-              ))}
+            <div className="text-xs text-blue-100/70">
+              {loadingPosts ? "????????..." : `???? ${filteredCount} / ${totalCount} ?????`}
             </div>
           </GlassCard>
-        </aside>
 
-        {/* 右下角全局统计板 */}
-        <aside className="fixed bottom-24 right-6 z-40 hidden md:block">
-          <GlassCard className="glass-card--dark w-56 gap-3 border-white/10">
-            <p className="text-xs uppercase tracking-[0.2em] text-blue-100/60">
-              Resonance Stats
-            </p>
-            <p className="text-2xl font-semibold text-white">{formattedCount}</p>
-            <p className="text-xs text-blue-100/70">{resonanceStatsLabel}</p>
+          <GlassCard className="glass-card--dark gap-4 border-white/10">
+            {formBody}
           </GlassCard>
         </aside>
 
-        {/* 底部中央 CTA */}
+        <aside className="fixed bottom-24 right-6 z-40 hidden md:block">
+          <GlassCard className="glass-card--dark w-56 gap-3 border-white/10">
+            <p className="text-xs uppercase tracking-[0.2em] text-blue-100/60">Resonance Stats</p>
+            <p className="text-2xl font-semibold text-white">{totalCount}</p>
+            <p className="text-xs text-blue-100/70">{DEFAULT_STATS_LABEL}</p>
+          </GlassCard>
+        </aside>
+
         <button
           type="button"
+          onClick={() => {
+            formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            addressInputRef.current?.focus();
+          }}
           className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full bg-gradient-to-r from-blue-500 via-blue-400 to-indigo-400 px-8 py-3 text-sm font-semibold text-white shadow-[0_20px_60px_rgba(59,130,246,0.45)] transition hover:scale-[1.01]"
         >
           <Plus className="h-4 w-4" />
-          + 添加我的记忆坐标
+          + ????????
         </button>
 
-        {/* 记忆胶囊弹窗：点击发光点后出现 */}
         <AnimatePresence>
-          {resonanceSelected ? (
+          {selectedPost ? (
             <motion.div
               className="fixed inset-0 z-50 flex items-center justify-center bg-[#050712]/70 backdrop-blur-sm"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={modalTransition}
-              onClick={() => setResonanceSelected(null)}
+              onClick={() => setSelectedPost(null)}
               style={{ transform: 'translateZ(0)' }}
             >
               <motion.div
                 role="dialog"
                 aria-modal="true"
-                aria-label={resonanceSelected.title}
+                aria-label={selectedPost.title || selectedPost.address}
                 className="glass-card glass-card--dark relative mx-6 w-full max-w-lg rounded-3xl p-6 text-blue-50"
                 initial={{ y: 20, opacity: 0, scale: 0.98 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -305,40 +427,23 @@ export default function ResonancePage() {
               >
                 <button
                   type="button"
-                  onClick={() => setResonanceSelected(null)}
+                  onClick={() => setSelectedPost(null)}
                   className="absolute right-4 top-4 rounded-full border border-white/20 bg-white/10 p-1 text-blue-100/70 hover:text-white"
-                  aria-label="关闭"
+                  aria-label="??"
                 >
                   <X className="h-4 w-4" />
                 </button>
 
                 <p className="text-xs uppercase tracking-[0.2em] text-blue-100/70">
-                  {resonanceSelected.title}
+                  {selectedPost.title || '????'}
                 </p>
-                <div className="mt-4 overflow-hidden rounded-2xl border border-white/15 bg-white/5">
-                  <img
-                    src={resonanceSelected.image}
-                    alt="记忆画面"
-                    className="h-48 w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-                <p className="mt-4 text-sm leading-relaxed text-blue-100/80">
-                  {resonanceSelected.text}
+                <p className="mt-3 text-sm text-blue-100/70">{selectedPost.address}</p>
+                <p className="mt-4 text-sm leading-relaxed text-blue-100/85">
+                  {selectedPost.content}
                 </p>
-
-                <button
-                  type="button"
-                  onClick={handleResonanceInject}
-                  className={`mt-6 flex w-full items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition ${
-                    selectedIsInjected
-                      ? 'bg-white/15 text-blue-100/80'
-                      : 'bg-gradient-to-r from-blue-500 via-blue-400 to-indigo-400 text-white'
-                  }`}
-                >
-                  {selectedIsInjected ? '已点亮 · +1' : '注入共鸣'}
-                </button>
+                {selectedPost.township ? (
+                  <p className="mt-4 text-xs text-blue-100/60">?????{selectedPost.township}</p>
+                ) : null}
               </motion.div>
             </motion.div>
           ) : null}
