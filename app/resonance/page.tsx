@@ -20,7 +20,7 @@ type GeoResult = {
 };
 
 const AMAP_PLUGINS = ['AMap.Geocoder', 'AMap.Scale'];
-const DEFAULT_STATS_LABEL = '\u5df2\u53d1\u5e03\u5171\u9e23\u8bb0\u5fc6';
+const DEFAULT_STATS_LABEL = '???????';
 
 function roundCoord(value: number, decimals = 3) {
   const factor = Math.pow(10, decimals);
@@ -46,11 +46,7 @@ async function geocodeAddress(address: string): Promise<GeoResult> {
   return new Promise((resolve, reject) => {
     geocoder.getLocation(address, (status: string, result: any) => {
       if (status !== 'complete' || !result?.geocodes?.length) {
-        reject(
-          new Error(
-            '\u672a\u80fd\u5b9a\u4f4d\u5230\u8be5\u5730\u5740\uff0c\u8bf7\u5c1d\u8bd5\u66f4\u7cbe\u786e\u7684\u9547\u002f\u8857\u9053\u540d\u79f0\u3002'
-          )
-        );
+        reject(new Error('?????????????????/?????'));
         return;
       }
 
@@ -64,9 +60,7 @@ async function geocodeAddress(address: string): Promise<GeoResult> {
       );
 
       if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
-        reject(
-          new Error('\u5b9a\u4f4d\u5750\u6807\u5f02\u5e38\uff0c\u8bf7\u66f4\u6362\u5730\u5740\u63cf\u8ff0\u3002')
-        );
+        reject(new Error('???????????????'));
         return;
       }
 
@@ -93,7 +87,7 @@ async function geocodeAddress(address: string): Promise<GeoResult> {
 }
 
 export default function ResonancePage() {
-  const resonanceBrand = homeData.brand ?? { name: '\u5fc3\u955c', en: 'HeartMirror' };
+  const resonanceBrand = homeData.brand ?? { name: '??', en: 'HeartMirror' };
   const resonanceNavItems = (Array.isArray(homeData.nav) ? homeData.nav : []).map((item) => ({
     ...item,
     href: item.href.startsWith('#') ? `/${item.href}` : item.href
@@ -128,7 +122,7 @@ export default function ResonancePage() {
         const response = await fetch('/api/resonance/posts', { cache: 'no-store' });
         if (!response.ok) {
           const payload = (await response.json()) as { error?: string };
-          throw new Error(payload.error || '\u5171\u9e23\u5730\u56fe\u6570\u636e\u52a0\u8f7d\u5931\u8d25');
+          throw new Error(payload.error || '??????????');
         }
 
         const payload = (await response.json()) as { items?: ResonancePost[] };
@@ -137,11 +131,7 @@ export default function ResonancePage() {
         }
       } catch (error) {
         if (!cancelled) {
-          setLoadError(
-            error instanceof Error
-              ? error.message
-              : '\u5171\u9e23\u5730\u56fe\u6570\u636e\u52a0\u8f7d\u5931\u8d25'
-          );
+          setLoadError(error instanceof Error ? error.message : '??????????');
         }
       } finally {
         if (!cancelled) {
@@ -179,7 +169,7 @@ export default function ResonancePage() {
   const handleLocate = async () => {
     const input = addressInput.trim();
     if (!input) {
-      setFormError('\u8bf7\u8f93\u5165\u8981\u5b9a\u4f4d\u7684\u9547\u002f\u8857\u9053\u5730\u5740\u3002');
+      setFormError('????????/?????');
       return;
     }
 
@@ -191,11 +181,7 @@ export default function ResonancePage() {
       setGeoResult(result);
     } catch (error) {
       setGeoResult(null);
-      setFormError(
-        error instanceof Error
-          ? error.message
-          : '\u5b9a\u4f4d\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u518d\u8bd5\u3002'
-      );
+      setFormError(error instanceof Error ? error.message : '???????????');
     } finally {
       setLocating(false);
     }
@@ -203,12 +189,12 @@ export default function ResonancePage() {
 
   const handlePublish = async () => {
     if (!geoResult) {
-      setFormError('\u8bf7\u5148\u5b8c\u6210\u5730\u5740\u5b9a\u4f4d\uff0c\u518d\u53d1\u5e03\u8bb0\u5fc6\u3002');
+      setFormError('???????????????');
       return;
     }
 
     if (!contentInput.trim()) {
-      setFormError('\u8bf7\u586b\u5199\u8981\u53d1\u5e03\u7684\u8bb0\u5fc6\u5185\u5bb9\u3002');
+      setFormError('????????????');
       return;
     }
 
@@ -233,7 +219,7 @@ export default function ResonancePage() {
 
       if (!response.ok) {
         const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error || '\u53d1\u5e03\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002');
+        throw new Error(payload.error || '???????????');
       }
 
       const created = (await response.json()) as ResonancePost;
@@ -242,11 +228,7 @@ export default function ResonancePage() {
       setTitleInput('');
       setContentInput('');
     } catch (error) {
-      setFormError(
-        error instanceof Error
-          ? error.message
-          : '\u53d1\u5e03\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002'
-      );
+      setFormError(error instanceof Error ? error.message : '???????????');
     } finally {
       setPublishing(false);
     }
@@ -258,7 +240,7 @@ export default function ResonancePage() {
     <>
       <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-blue-100/70">
         <MapPin className="h-3 w-3" />
-        \u53d1\u5e03\u8bb0\u5fc6\u5750\u6807
+        ??????
       </div>
 
       <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-blue-100/80">
@@ -271,7 +253,7 @@ export default function ResonancePage() {
               setGeoResult(null);
             }
           }}
-          placeholder="\u8f93\u5165\u7cbe\u786e\u5230\u9547\u7684\u5730\u5740"
+          placeholder="?????????"
           className="w-full bg-transparent text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
         />
         <button
@@ -281,31 +263,29 @@ export default function ResonancePage() {
           disabled={locating}
         >
           <Navigation className="h-3 w-3" />
-          {locating ? '\u5b9a\u4f4d\u4e2d' : '\u5b9a\u4f4d'}
+          {locating ? '???' : '??'}
         </button>
       </div>
 
       {geoResult ? (
         <p className="text-xs text-blue-100/70">
-          \u5df2\u5b9a\u4f4d\uff1a{geoResult.label}\uff08\u5750\u6807\u5df2\u964d\u7cbe\u5ea6\u5230\u9547\u7ea7\uff09
+          ????{geoResult.label}???????????
         </p>
       ) : (
-        <p className="text-xs text-blue-100/60">
-          \u8bf7\u5148\u5b9a\u4f4d\u5730\u5740\uff0c\u5730\u56fe\u5c06\u81ea\u52a8\u79fb\u52a8\u5230\u8be5\u9547\u3002
-        </p>
+        <p className="text-xs text-blue-100/60">??????????????????</p>
       )}
 
       <input
         value={titleInput}
         onChange={(event) => setTitleInput(event.target.value)}
-        placeholder="\u8bb0\u5fc6\u6807\u9898\uff08\u53ef\u9009\uff09"
+        placeholder="????????"
         className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
       />
 
       <textarea
         value={contentInput}
         onChange={(event) => setContentInput(event.target.value)}
-        placeholder="\u5199\u4e0b\u60f3\u8d34\u5728\u5730\u56fe\u4e0a\u7684\u8bb0\u5fc6\u7247\u6bb5..."
+        placeholder="?????????????..."
         rows={4}
         className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
       />
@@ -318,7 +298,7 @@ export default function ResonancePage() {
         disabled={publishing}
         className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-500 via-blue-400 to-indigo-400 px-4 py-3 text-xs font-semibold text-white shadow-[0_16px_40px_rgba(59,130,246,0.35)] transition hover:scale-[1.01] disabled:opacity-60"
       >
-        {publishing ? '\u53d1\u5e03\u4e2d...' : '\u53d1\u5e03\u5230\u5730\u56fe'}
+        {publishing ? '???...' : '?????'}
       </button>
     </>
   );
@@ -339,10 +319,10 @@ export default function ResonancePage() {
               <div className="absolute bottom-8 left-8 z-10">
                 <p className="text-xs uppercase tracking-[0.3em] text-blue-200/70">Resonance Map</p>
                 <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                  \u65f6\u7a7a\u5171\u9e23 \u00b7 \u96c6\u4f53\u8bb0\u5fc6\u5730\u56fe
+                  ???? ? ??????
                 </h1>
                 <p className="mt-3 max-w-xl text-sm leading-relaxed text-blue-100/70">
-                  \u4f7f\u7528\u4f4e\u7cbe\u5ea6\u73b0\u5b9e\u5730\u56fe\u5448\u73b0\u6bcf\u4e00\u6bb5\u8bb0\u5fc6\u5750\u6807\uff0c\u8ba9\u5171\u9e23\u505c\u7559\u5728\u9547\u7ea7\u5c3a\u5ea6\u4e4b\u4e0a\u3002
+                  ????????????????????????????????
                 </p>
               </div>
             </div>
@@ -352,21 +332,21 @@ export default function ResonancePage() {
             <GlassCard className="glass-card--dark gap-4 border-white/10">
               <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-blue-100/70">
                 <Sparkles className="h-3 w-3" />
-                \u5171\u9e23\u68c0\u7d22
+                ????
               </div>
               <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-blue-100/80">
                 <Search className="h-3.5 w-3.5 text-blue-200/70" />
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="\u641c\u7d22\u5730\u70b9\u3001\u8bb0\u5fc6\u6216\u5173\u952e\u8bcd..."
+                  placeholder="???????????..."
                   className="w-full bg-transparent text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
                 />
               </div>
               <div className="text-xs text-blue-100/70">
                 {loadingPosts
-                  ? '\u6b63\u5728\u52a0\u8f7d\u5730\u56fe\u8bb0\u5fc6...'
-                  : `\u5f53\u524d\u5c55\u793a ${filteredCount} / ${totalCount} \u6761\u5171\u9e23\u8bb0\u5f55`}
+                  ? '????????...'
+                  : `???? ${filteredCount} / ${totalCount} ?????`}
               </div>
             </GlassCard>
 
@@ -384,21 +364,21 @@ export default function ResonancePage() {
           <GlassCard className="glass-card--dark gap-4 border-white/10">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-blue-100/70">
               <Sparkles className="h-3 w-3" />
-              \u5171\u9e23\u68c0\u7d22
+              ????
             </div>
             <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-blue-100/80">
               <Search className="h-3.5 w-3.5 text-blue-200/70" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="\u641c\u7d22\u5730\u70b9\u3001\u8bb0\u5fc6\u6216\u5173\u952e\u8bcd..."
+                placeholder="???????????..."
                 className="w-full bg-transparent text-xs text-blue-100/80 placeholder:text-blue-200/50 focus:outline-none"
               />
             </div>
             <div className="text-xs text-blue-100/70">
               {loadingPosts
-                ? '\u6b63\u5728\u52a0\u8f7d\u5730\u56fe\u8bb0\u5fc6...'
-                : `\u5f53\u524d\u5c55\u793a ${filteredCount} / ${totalCount} \u6761\u5171\u9e23\u8bb0\u5f55`}
+                ? '????????...'
+                : `???? ${filteredCount} / ${totalCount} ?????`}
             </div>
           </GlassCard>
 
@@ -422,7 +402,7 @@ export default function ResonancePage() {
           className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full bg-gradient-to-r from-blue-500 via-blue-400 to-indigo-400 px-8 py-3 text-sm font-semibold text-white shadow-[0_20px_60px_rgba(59,130,246,0.45)] transition hover:scale-[1.01]"
         >
           <Plus className="h-4 w-4" />
-          \u002b \u6dfb\u52a0\u6211\u7684\u8bb0\u5fc6\u5750\u6807
+          + ????????
         </button>
 
         <AnimatePresence>
@@ -452,13 +432,13 @@ export default function ResonancePage() {
                   type="button"
                   onClick={() => setSelectedPost(null)}
                   className="absolute right-4 top-4 rounded-full border border-white/20 bg-white/10 p-1 text-blue-100/70 hover:text-white"
-                  aria-label="\u5173\u95ed"
+                  aria-label="??"
                 >
                   <X className="h-4 w-4" />
                 </button>
 
                 <p className="text-xs uppercase tracking-[0.2em] text-blue-100/70">
-                  {selectedPost.title || '\u5171\u9e23\u8bb0\u5fc6'}
+                  {selectedPost.title || '????'}
                 </p>
                 <p className="mt-3 text-sm text-blue-100/70">{selectedPost.address}</p>
                 <p className="mt-4 text-sm leading-relaxed text-blue-100/85">
@@ -466,7 +446,7 @@ export default function ResonancePage() {
                 </p>
                 {selectedPost.township ? (
                   <p className="mt-4 text-xs text-blue-100/60">
-                    \u5b9a\u4f4d\u9547\u57df\uff1a{selectedPost.township}
+                    ?????{selectedPost.township}
                   </p>
                 ) : null}
               </motion.div>
