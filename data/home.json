@@ -75,7 +75,7 @@
     "id": "resonance",
     "title": "【心镜 镜】集体记忆地图",
     "description": "结合 UGC 与地理坐标，构建沉浸式数字家园，形成跨时空的温暖共鸣。",
-    "image": "/pic/jing.png",
+    "image": "/mock-map.svg",
     "align": "left",
     "href": "/resonance"
   },
