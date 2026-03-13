@@ -9,7 +9,8 @@ import { GlassCard } from '@/components/GlassCard';
 import { GlassNavbar } from '@/components/GlassNavbar';
 import { ResonanceComposer } from '@/components/resonance/ResonanceComposer';
 import { loadAmap } from '@/components/resonance/amap';
-import { ResonanceMap } from '@/components/resonance/ResonanceMap';
+import { ResonanceLocationModal } from '@/components/resonance/ResonanceLocationModal';
+import { ResonanceMap, type ResonanceMapSelection } from '@/components/resonance/ResonanceMap';
 import { ResonancePostModal } from '@/components/resonance/ResonancePostModal';
 import homeData from '@/data/home.json';
 import type {
@@ -159,6 +160,7 @@ export default function ResonancePage() {
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [selectedPost, setSelectedPost] = useState<ResonancePost | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<ResonanceMapSelection | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
   const [query, setQuery] = useState('');
@@ -197,11 +199,61 @@ export default function ResonancePage() {
   const mergePost = useCallback((nextPost: ResonancePost) => {
     setPosts((prev) => sortPostsByTime(prev.some((item) => item.id === nextPost.id) ? prev.map((item) => (item.id === nextPost.id ? { ...item, ...nextPost } : item)) : [nextPost, ...prev]));
     setSelectedPost((prev) => (prev?.id === nextPost.id ? { ...prev, ...nextPost } : prev));
+    setSelectedLocation((prev) =>
+      prev
+        ? {
+            ...prev,
+            posts: sortPostsByTime(
+              prev.posts.some((item) => item.id === nextPost.id)
+                ? prev.posts.map((item) => (item.id === nextPost.id ? { ...item, ...nextPost } : item))
+                : prev.posts
+            )
+          }
+        : prev
+    );
   }, []);
 
   const updateFavoriteState = useCallback((state: ResonanceFavoriteState) => {
     setPosts((prev) => prev.map((item) => (item.id === state.postId ? { ...item, favoriteCount: state.favoriteCount, isFavorite: state.isFavorite } : item)));
     setSelectedPost((prev) => (prev?.id === state.postId ? { ...prev, favoriteCount: state.favoriteCount, isFavorite: state.isFavorite } : prev));
+    setSelectedLocation((prev) =>
+      prev
+        ? {
+            ...prev,
+            posts: prev.posts.map((item) =>
+              item.id === state.postId
+                ? { ...item, favoriteCount: state.favoriteCount, isFavorite: state.isFavorite }
+                : item
+            )
+          }
+        : prev
+    );
+  }, []);
+
+  const handleMapReady = useCallback(() => {
+    setMapReady(true);
+    setMapError('');
+  }, []);
+
+  const handleMapError = useCallback((message: string) => {
+    setMapReady(false);
+    setMapError(message);
+  }, []);
+
+  const handleMapSelect = useCallback((selection: ResonanceMapSelection) => {
+    if (selection.posts.length <= 1) {
+      setSelectedLocation(null);
+      setSelectedPost(selection.posts[0] ?? null);
+      return;
+    }
+
+    setSelectedPost(null);
+    setSelectedLocation(selection);
+  }, []);
+
+  const handleSelectPostFromLocation = useCallback((post: ResonancePost) => {
+    setSelectedLocation(null);
+    setSelectedPost(post);
   }, []);
 
   const loadPosts = useCallback(async () => {
@@ -389,7 +441,15 @@ export default function ResonancePage() {
             </aside>
             <section className="order-1 xl:order-2">
               <div className="relative min-h-[640px] overflow-hidden rounded-[36px] border border-white/10 bg-[#0a1024]/80 shadow-[0_40px_120px_rgba(6,10,25,0.55)] backdrop-blur-[10px] sm:min-h-[760px]">
-                <div className="absolute inset-0"><ResonanceMap posts={filteredPosts} focus={focus} onSelect={setSelectedPost} onReady={() => { setMapReady(true); setMapError(''); }} onError={(message) => { setMapReady(false); setMapError(message); }} /></div>
+                <div className="absolute inset-0">
+                  <ResonanceMap
+                    posts={filteredPosts}
+                    focus={focus}
+                    onSelect={handleMapSelect}
+                    onReady={handleMapReady}
+                    onError={handleMapError}
+                  />
+                </div>
                 <div className="resonance-map-overlay absolute inset-0 z-[1]" />
                 <div className="absolute inset-x-0 bottom-0 z-[2] h-56 bg-gradient-to-t from-[#040817] via-[#040817]/80 to-transparent" />
                 <div className="absolute left-6 top-6 z-[3] flex max-w-lg flex-col gap-3">
@@ -402,7 +462,29 @@ export default function ResonancePage() {
           </section>
         </main>
         <button type="button" onClick={() => { formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); addressInputRef.current?.focus(); }} className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 cursor-pointer items-center gap-3 rounded-full bg-gradient-to-r from-blue-500 via-blue-400 to-indigo-400 px-8 py-3 text-sm font-semibold text-white shadow-[0_20px_60px_rgba(59,130,246,0.45)] transition hover:scale-[1.01] xl:hidden"><Plus className="h-4 w-4" />添加我的记忆坐标</button>
-        <ResonancePostModal post={selectedPost} detailLoading={detailLoading} detailError={detailError} favoritePending={favoritePending} commentPending={commentPending} commentInput={commentInput} transition={modalTransition} onClose={() => setSelectedPost(null)} onToggleFavorite={handleToggleFavorite} onCommentChange={setCommentInput} onSubmitComment={handleSubmitComment} formatDisplayTime={formatDisplayTime} />
+        <ResonanceLocationModal
+          open={Boolean(selectedLocation)}
+          title={selectedLocation?.label || '该地点'}
+          posts={selectedLocation?.posts ?? []}
+          transition={modalTransition}
+          formatDisplayTime={formatDisplayTime}
+          onClose={() => setSelectedLocation(null)}
+          onSelectPost={handleSelectPostFromLocation}
+        />
+        <ResonancePostModal
+          post={selectedPost}
+          detailLoading={detailLoading}
+          detailError={detailError}
+          favoritePending={favoritePending}
+          commentPending={commentPending}
+          commentInput={commentInput}
+          transition={modalTransition}
+          onClose={() => setSelectedPost(null)}
+          onToggleFavorite={handleToggleFavorite}
+          onCommentChange={setCommentInput}
+          onSubmitComment={handleSubmitComment}
+          formatDisplayTime={formatDisplayTime}
+        />
       </div>
     </div>
   );
