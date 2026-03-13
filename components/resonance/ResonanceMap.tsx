@@ -176,7 +176,7 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
       return;
     }
 
-    const position = [focus.lng, focus.lat];
+    const position: [number, number] = [focus.lng, focus.lat];
     if (!previewRef.current) {
       previewRef.current = new AMap.Marker({
         position,

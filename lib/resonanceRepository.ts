@@ -39,7 +39,6 @@ type ResonancePostRow = {
   lng: number | null;
   lat: number | null;
   createdat: string | null;
-  users?: UserRow | UserRow[] | null;
 };
 
 type GenericPostRow = {
@@ -59,7 +58,6 @@ type ResonanceCommentRow = {
   userid: number | null;
   content: string | null;
   createdat: string | null;
-  users?: UserRow | UserRow[] | null;
 };
 
 type ResonanceFavoriteRow = {
@@ -104,7 +102,7 @@ export type ResonanceViewer = {
 };
 
 const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? 'pixiv-images';
-const RESONANCE_POST_SELECT = 'postid,userid,title,content,address,township,lng,lat,createdat,users(userid,account,nickname)';
+const RESONANCE_POST_SELECT = 'postid,userid,title,content,address,township,lng,lat,createdat';
 const GENERIC_POST_SELECT =
   'postid,authorid,title,content,favoritecount,createdat,posttype,postattachments(attachmentid,postid,fileurl,sortorder,mediatype,createdat)';
 const VISIBILITY_VALUES = new Set<ResonanceVisibility>(['public', 'private']);
@@ -182,6 +180,7 @@ export async function listResonancePosts({
 
   const rows = (data ?? []) as ResonancePostRow[];
   const postIds = rows.map((row) => row.postid);
+  const authorMap = await loadUsersMap(rows.map((row) => row.userid));
   const metaMap = await loadResonanceMetaMap(postIds);
   const socialPostIds = [...metaMap.values()]
     .map((meta) => meta.socialPostId)
@@ -214,7 +213,7 @@ export async function listResonancePosts({
       const meta = metaMap.get(row.postid);
       const socialPostId = meta?.socialPostId;
 
-      return mapResonancePost(row, meta, {
+      return mapResonancePost(row, authorMap.get(row.userid ?? -1), meta, {
         favoriteCount: socialPostId ? favoriteCountMap.get(socialPostId) ?? 0 : 0,
         commentCount: socialPostId ? commentCountMap.get(socialPostId) ?? 0 : 0,
         isFavorite: Boolean(socialPostId && favoriteState.has(socialPostId))
@@ -248,13 +247,20 @@ export async function getResonancePostDetail(
     socialPostId ? loadCommentRows([socialPostId]) : Promise.resolve([] as ResonanceCommentRow[])
   ]);
 
-  const comments = commentRows.map(mapComment);
+  const authorMap = await loadUsersMap([
+    row.userid,
+    ...commentRows.map((commentRow) => commentRow.userid)
+  ]);
+
+  const comments = commentRows.map((commentRow) =>
+    mapComment(commentRow, authorMap.get(commentRow.userid ?? -1))
+  );
   const favoriteCount = favoriteRows.length;
   const isFavorite = Boolean(
     viewerUserId && favoriteRows.some((rowItem) => rowItem.userid === viewerUserId)
   );
 
-  return mapResonancePost(row, meta, {
+  return mapResonancePost(row, authorMap.get(row.userid ?? -1), meta, {
     favoriteCount,
     commentCount: comments.length,
     isFavorite,
@@ -471,7 +477,7 @@ async function loadCommentRows(postIds: number[]) {
 
   const { data, error } = await supabaseAdmin
     .from('postcomments')
-    .select('commentid,postid,userid,content,createdat,users(userid,account,nickname)')
+    .select('commentid,postid,userid,content,createdat')
     .in('postid', postIds)
     .order('createdat', { ascending: true });
 
@@ -626,6 +632,7 @@ function resolveExtension(fileName: string, mediaType: ResonanceMediaType) {
 
 function mapResonancePost(
   row: ResonancePostRow,
+  author: UserRow | undefined,
   meta: ResonanceMeta | undefined,
   extras: ResonancePostExtras
 ): ResonancePost {
@@ -639,7 +646,7 @@ function mapResonancePost(
     lat: Number(row.lat) || 0,
     createdAt: row.createdat ?? new Date(0).toISOString(),
     userId: row.userid ?? undefined,
-    authorName: resolveUserName(row.users, row.userid),
+    authorName: resolveUserName(author, row.userid),
     visibility: meta?.visibility ?? 'public',
     attachments: mapAttachments(meta?.attachments),
     commentCount: extras.commentCount,
@@ -668,18 +675,17 @@ function mapAttachments(rows: AttachmentRow[] | null | undefined): ResonanceAtta
     }));
 }
 
-function mapComment(row: ResonanceCommentRow): ResonanceComment {
+function mapComment(row: ResonanceCommentRow, author: UserRow | undefined): ResonanceComment {
   return {
     id: row.commentid,
     content: row.content?.trim() || '',
     createdAt: row.createdat ?? new Date(0).toISOString(),
     userId: row.userid ?? undefined,
-    authorName: resolveUserName(row.users, row.userid)
+    authorName: resolveUserName(author, row.userid)
   };
 }
 
-function resolveUserName(value: UserRow | UserRow[] | null | undefined, userId?: number | null) {
-  const row = Array.isArray(value) ? value[0] : value;
+function resolveUserName(row: UserRow | null | undefined, userId?: number | null) {
   const nickname = row?.nickname?.trim();
   if (nickname) {
     return nickname;
@@ -721,6 +727,30 @@ function countRowsByPostId(rows: Array<{ postid: number | null }>) {
   });
 
   return counts;
+}
+
+async function loadUsersMap(userIds: Array<number | null | undefined>) {
+  const uniqueIds = [...new Set(userIds.filter((value): value is number => Number.isFinite(value)))];
+  const map = new Map<number, UserRow>();
+
+  if (uniqueIds.length === 0) {
+    return map;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .select('userid,account,nickname')
+    .in('userid', uniqueIds);
+
+  if (error) {
+    throw new Error(`Failed to load resonance authors: ${error.message}`);
+  }
+
+  ((data ?? []) as UserRow[]).forEach((row) => {
+    map.set(row.userid, row);
+  });
+
+  return map;
 }
 
 function parseResonancePostId(value: number | string) {
