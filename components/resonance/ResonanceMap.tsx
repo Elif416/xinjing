@@ -71,10 +71,15 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
   const previewRef = useRef<AMapMarkerInstance | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const focusRef = useRef<MapFocus | null>(focus ?? null);
+  const postsRef = useRef<ResonancePost[]>(posts);
 
   useEffect(() => {
     focusRef.current = focus ?? null;
   }, [focus]);
+
+  useEffect(() => {
+    postsRef.current = posts;
+  }, [posts]);
 
   const applyFocus = (map: AMapMapInstance, AMap: AMapLike, nextFocus: MapFocus | null) => {
     if (!nextFocus) {
@@ -100,6 +105,37 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
     }
 
     map.setZoomAndCenter(FOCUS_ZOOM, position);
+  };
+
+  const applyMarkers = (
+    map: AMapMapInstance,
+    AMap: AMapLike,
+    nextPosts: ResonancePost[],
+    handleSelect?: (post: ResonancePost) => void
+  ) => {
+    if (markersRef.current.length > 0) {
+      map.remove(markersRef.current);
+      markersRef.current = [];
+    }
+
+    const nextMarkers = nextPosts.map((post) => {
+      const isPrivate = post.visibility === 'private';
+      const marker = new AMap.Marker({
+        position: [post.lng, post.lat],
+        anchor: 'center',
+        offset: new AMap.Pixel(-10, -10),
+        title: post.title || post.address,
+        content: `<div style="position:relative;width:20px;height:20px;"><span style="position:absolute;inset:-8px;border-radius:999px;background:${isPrivate ? 'rgba(216,180,254,0.18)' : 'rgba(96,165,250,0.18)'};box-shadow:0 0 18px ${isPrivate ? 'rgba(216,180,254,0.45)' : 'rgba(96,165,250,0.45)'};"></span><span style="position:absolute;inset:0;border-radius:999px;background:${isPrivate ? 'rgba(232,121,249,0.96)' : 'rgba(96,165,250,0.96)'};border:3px solid rgba(255,255,255,0.95);box-shadow:0 0 24px ${isPrivate ? 'rgba(232,121,249,0.7)' : 'rgba(96,165,250,0.75)'};"></span></div>`
+      });
+
+      marker.on('click', () => handleSelect?.(post));
+      return marker;
+    });
+
+    if (nextMarkers.length > 0) {
+      map.add(nextMarkers);
+      markersRef.current = nextMarkers;
+    }
   };
 
   useEffect(() => {
@@ -131,6 +167,7 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
         mapRef.current = map;
         onReady?.();
         requestAnimationFrame(() => map.resize());
+        applyMarkers(map, AMap, postsRef.current, onSelect);
         applyFocus(map, AMap, focusRef.current);
 
         if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
@@ -172,25 +209,7 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
     if (!AMap) {
       return;
     }
-
-    const nextMarkers = posts.map((post) => {
-      const isPrivate = post.visibility === 'private';
-      const marker = new AMap.Marker({
-        position: [post.lng, post.lat],
-        anchor: 'center',
-        offset: new AMap.Pixel(-10, -10),
-        title: post.title || post.address,
-        content: `<div style="position:relative;width:20px;height:20px;"><span style="position:absolute;inset:-8px;border-radius:999px;background:${isPrivate ? 'rgba(216,180,254,0.18)' : 'rgba(96,165,250,0.18)'};box-shadow:0 0 18px ${isPrivate ? 'rgba(216,180,254,0.45)' : 'rgba(96,165,250,0.45)'};"></span><span style="position:absolute;inset:0;border-radius:999px;background:${isPrivate ? 'rgba(232,121,249,0.96)' : 'rgba(96,165,250,0.96)'};border:3px solid rgba(255,255,255,0.95);box-shadow:0 0 24px ${isPrivate ? 'rgba(232,121,249,0.7)' : 'rgba(96,165,250,0.75)'};"></span></div>`
-      });
-
-      marker.on('click', () => onSelect?.(post));
-      return marker;
-    });
-
-    if (nextMarkers.length > 0) {
-      map.add(nextMarkers);
-      markersRef.current = nextMarkers;
-    }
+    applyMarkers(map, AMap, posts, onSelect);
   }, [posts, onSelect]);
 
   useEffect(() => {
