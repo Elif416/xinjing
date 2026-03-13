@@ -397,12 +397,12 @@ export default function ResonancePage() {
   };
 
   return (
-    <div className="min-h-screen text-slate-100">
-      <div className="page-bg resonance-bg">
+    <div className="min-h-screen bg-[#030612] text-slate-100">
+      <div className="page-bg resonance-bg flex min-h-screen flex-col">
         <GlassNavbar brand={resonanceBrand} items={resonanceNavItems} />
-        <main className="mx-auto w-full max-w-[1440px] px-6 py-12">
+        <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-6 py-6 sm:py-8">
           {loadError ? <GlassCard className="glass-card--dark mb-6 border-red-500/40 text-red-100">{loadError}</GlassCard> : null}
-          <section className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+          <section className="grid flex-1 gap-6 xl:min-h-[calc(100svh-8.5rem)] xl:grid-cols-[360px_minmax(0,1fr)] xl:items-stretch">
             <aside ref={formRef} className="order-2 flex flex-col gap-4 xl:order-1 xl:sticky xl:top-28 xl:self-start">
               <GlassCard className="glass-card--dark gap-4 border-white/10">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-blue-100/70"><Sparkles className="h-3 w-3" />共鸣检索</div>
@@ -439,8 +439,8 @@ export default function ResonancePage() {
               </GlassCard>
               <GlassCard className="glass-card--dark w-full gap-3 border-white/10 xl:hidden"><p className="text-xs uppercase tracking-[0.2em] text-blue-100/60">Resonance Stats</p><p className="text-3xl font-semibold text-white">{posts.length}</p><p className="text-xs text-blue-100/70">{DEFAULT_STATS_LABEL}</p></GlassCard>
             </aside>
-            <section className="order-1 xl:order-2">
-              <div className="relative min-h-[640px] overflow-hidden rounded-[36px] border border-white/10 bg-[#0a1024]/80 shadow-[0_40px_120px_rgba(6,10,25,0.55)] backdrop-blur-[10px] sm:min-h-[760px]">
+            <section className="order-1 flex xl:order-2">
+              <div className="relative min-h-[640px] w-full overflow-hidden rounded-[36px] border border-white/10 bg-[#0a1024]/80 shadow-[0_40px_120px_rgba(6,10,25,0.55)] backdrop-blur-[10px] sm:min-h-[760px] xl:h-full xl:min-h-0">
                 <div className="absolute inset-0">
                   <ResonanceMap
                     posts={filteredPosts}
