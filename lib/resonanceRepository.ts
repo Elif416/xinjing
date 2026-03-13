@@ -104,7 +104,7 @@ export type ResonanceViewer = {
 const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? 'pixiv-images';
 const RESONANCE_POST_SELECT = 'postid,userid,title,content,address,township,lng,lat,createdat';
 const GENERIC_POST_SELECT =
-  'postid,authorid,title,content,favoritecount,createdat,posttype,postattachments(attachmentid,postid,fileurl,sortorder,mediatype,createdat)';
+  'postid,authorid,title,content,favoritecount,createdat,posttype,postattachments(attachmentid,postid,fileurl,sortorder,mediatype)';
 const VISIBILITY_VALUES = new Set<ResonanceVisibility>(['public', 'private']);
 const MAX_ATTACHMENTS = 4;
 const MAX_IMAGE_SIZE = 12 * 1024 * 1024;
@@ -500,7 +500,6 @@ async function uploadResonanceAttachments(postId: number, files: UploadableFile[
       fileurl: string;
       sortorder: number;
       mediatype: ResonanceMediaType;
-      createdat: string;
     }> = [];
 
     for (const [index, item] of files.entries()) {
@@ -523,8 +522,7 @@ async function uploadResonanceAttachments(postId: number, files: UploadableFile[
         postid: postId,
         fileurl: filePath,
         sortorder: index,
-        mediatype: item.mediaType,
-        createdat: new Date().toISOString()
+        mediatype: item.mediaType
       });
     }
 

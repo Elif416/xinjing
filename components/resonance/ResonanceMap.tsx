@@ -70,6 +70,37 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
   const markersRef = useRef<AMapMarkerInstance[]>([]);
   const previewRef = useRef<AMapMarkerInstance | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const focusRef = useRef<MapFocus | null>(focus ?? null);
+
+  useEffect(() => {
+    focusRef.current = focus ?? null;
+  }, [focus]);
+
+  const applyFocus = (map: AMapMapInstance, AMap: AMapLike, nextFocus: MapFocus | null) => {
+    if (!nextFocus) {
+      if (previewRef.current) {
+        map.remove(previewRef.current);
+        previewRef.current = null;
+      }
+      return;
+    }
+
+    const position: [number, number] = [nextFocus.lng, nextFocus.lat];
+    if (!previewRef.current) {
+      previewRef.current = new AMap.Marker({
+        position,
+        anchor: 'center',
+        offset: new AMap.Pixel(-13, -13),
+        content:
+          '<div style="position:relative;width:26px;height:26px;"><span style="position:absolute;inset:-9px;border-radius:999px;background:rgba(251,191,36,0.18);box-shadow:0 0 22px rgba(251,191,36,0.7);"></span><span style="position:absolute;inset:0;border-radius:999px;background:rgba(251,191,36,0.98);border:3px solid rgba(255,255,255,0.95);box-shadow:0 0 22px rgba(251,191,36,0.92);"></span></div>'
+      });
+      map.add(previewRef.current);
+    } else {
+      previewRef.current.setPosition(position);
+    }
+
+    map.setZoomAndCenter(FOCUS_ZOOM, position);
+  };
 
   useEffect(() => {
     let disposed = false;
@@ -100,6 +131,7 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
         mapRef.current = map;
         onReady?.();
         requestAnimationFrame(() => map.resize());
+        applyFocus(map, AMap, focusRef.current);
 
         if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
           resizeObserverRef.current = new ResizeObserver(() => map.resize());
@@ -167,30 +199,7 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
     if (!map || !AMap) {
       return;
     }
-
-    if (!focus) {
-      if (previewRef.current) {
-        map.remove(previewRef.current);
-        previewRef.current = null;
-      }
-      return;
-    }
-
-    const position: [number, number] = [focus.lng, focus.lat];
-    if (!previewRef.current) {
-      previewRef.current = new AMap.Marker({
-        position,
-        anchor: 'center',
-        offset: new AMap.Pixel(-13, -13),
-        content:
-          '<div style="position:relative;width:26px;height:26px;"><span style="position:absolute;inset:-9px;border-radius:999px;background:rgba(251,191,36,0.18);box-shadow:0 0 22px rgba(251,191,36,0.7);"></span><span style="position:absolute;inset:0;border-radius:999px;background:rgba(251,191,36,0.98);border:3px solid rgba(255,255,255,0.95);box-shadow:0 0 22px rgba(251,191,36,0.92);"></span></div>'
-      });
-      map.add(previewRef.current);
-    } else {
-      previewRef.current.setPosition(position);
-    }
-
-    map.setZoomAndCenter(FOCUS_ZOOM, position);
+    applyFocus(map, AMap, focus ?? null);
   }, [focus]);
 
   return <div ref={containerRef} className="h-full w-full" />;
