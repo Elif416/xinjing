@@ -1,3 +1,5 @@
+import Image from 'next/image';
+import Link from 'next/link';
 import { Search, UserCircle } from 'lucide-react';
 import clsx from 'clsx';
 import { BackButton } from './BackButton';
@@ -35,15 +37,22 @@ export function GlassNavbar({
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 text-[12px] text-slate-700">
         <div className="flex items-center gap-3">
           {showBackButton ? <BackButton /> : null}
-          <a href="/" className="flex items-center gap-2 text-sm text-ink">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/40 bg-white/70 shadow-sm">
-              心镜
+          <Link href="/" className="flex items-center gap-2 text-sm text-ink">
+            <div className="relative h-10 w-10 overflow-hidden rounded-full border border-white/40 bg-white/70 shadow-sm">
+              <Image
+                src="/pic/logo.jpg"
+                alt={`${brand.name} logo`}
+                fill
+                sizes="40px"
+                className="object-cover"
+                priority
+              />
             </div>
             <div className="leading-tight">
               <p className="text-[13px] font-medium text-ink">{brand.name}</p>
               {brand.en ? <p className="text-[11px] text-slate-500">{brand.en}</p> : null}
             </div>
-          </a>
+          </Link>
         </div>
 
         <div className="hidden items-center gap-6 md:flex">
