@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 import { ArtistChatDrawer } from '@/components/ArtistChatDrawer';
 import { CommissionFormModal } from '@/components/CommissionFormModal';
@@ -15,6 +15,7 @@ import type { ArtistDetailData, ArtistPortfolioItem } from '@/lib/artistTypes';
 
 export default function ArtistDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const [artist, setArtist] = useState<ArtistDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,6 +106,29 @@ export default function ArtistDetailPage() {
     wide: 'md:col-span-2',
     normal: ''
   };
+
+  async function handleStartChat() {
+    if (!artist) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/messages/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUserId: Number(artist.id) })
+      });
+      const payload = (await response.json()) as { id?: number; error?: string };
+
+      if (!response.ok || !payload.id) {
+        throw new Error(payload.error || '创建私聊失败');
+      }
+
+      router.push(`/messages/${payload.id}`);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : '创建私聊失败，请稍后重试。');
+    }
+  }
 
   if (isLoading) {
     return (
@@ -324,7 +348,7 @@ export default function ArtistDetailPage() {
             </button>
             <button
               type="button"
-              onClick={() => setIsChatOpen(true)}
+              onClick={() => void handleStartChat()}
               className="glass-button glass-button--ghost text-sm"
             >
               发起私聊

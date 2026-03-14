@@ -1,7 +1,12 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, UserCircle } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Bell, Search, UserCircle } from 'lucide-react';
 import clsx from 'clsx';
+
 import { BackButton } from './BackButton';
 
 export type GlassNavItem = {
@@ -19,14 +24,52 @@ export type GlassNavbarProps = {
   className?: string;
 };
 
-// GlassNavbar：复用首页的玻璃导航栏样式，确保多页面一致性
-// 通过 props 注入品牌与导航数据，避免硬编码，便于后续扩展
+type UnreadPayload = {
+  unreadTotal?: number;
+};
+
 export function GlassNavbar({
   brand,
   items = [],
   showBackButton = true,
   className
 }: GlassNavbarProps) {
+  const pathname = usePathname();
+  const [unreadTotal, setUnreadTotal] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const syncUnread = async () => {
+      const nextUnread = await fetchUnreadTotal();
+      if (!cancelled) {
+        setUnreadTotal(nextUnread);
+      }
+    };
+
+    void syncUnread();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleSync = () => {
+      void (async () => {
+        const nextUnread = await fetchUnreadTotal();
+        setUnreadTotal(nextUnread);
+      })();
+    };
+
+    window.addEventListener('messages:sync', handleSync);
+
+    return () => window.removeEventListener('messages:sync', handleSync);
+  }, []);
+
+  const hasUnread = unreadTotal > 0;
+  const unreadLabel = useMemo(() => (unreadTotal > 9 ? '9+' : String(unreadTotal)), [unreadTotal]);
+
   return (
     <header
       className={clsx(
@@ -58,11 +101,7 @@ export function GlassNavbar({
         <div className="hidden items-center gap-6 md:flex">
           {items.length > 0 ? (
             items.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="transition-colors hover:text-ink"
-              >
+              <a key={item.label} href={item.href} className="transition-colors hover:text-ink">
                 {item.label}
               </a>
             ))
@@ -79,6 +118,20 @@ export function GlassNavbar({
           >
             <Search className="h-4 w-4" />
           </button>
+
+          <Link
+            href="/messages"
+            className="relative glass-button glass-button--ghost glass-button--icon"
+            aria-label="消息"
+          >
+            <Bell className="h-4 w-4" />
+            {hasUnread ? (
+              <span className="absolute -right-1 -top-1 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white shadow-[0_8px_18px_rgba(244,63,94,0.35)]">
+                {unreadLabel}
+              </span>
+            ) : null}
+          </Link>
+
           <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/40 bg-white/70 shadow-sm">
             <UserCircle className="h-5 w-5 text-slate-500" />
           </div>
@@ -86,4 +139,19 @@ export function GlassNavbar({
       </nav>
     </header>
   );
+}
+
+async function fetchUnreadTotal() {
+  try {
+    const response = await fetch('/api/messages/unread', { cache: 'no-store' });
+    const payload = (await response.json()) as UnreadPayload;
+
+    if (!response.ok) {
+      return 0;
+    }
+
+    return Math.max(0, Number(payload.unreadTotal ?? 0));
+  } catch {
+    return 0;
+  }
 }
