@@ -320,11 +320,11 @@ export default function MessageConversationPage() {
   const pickImage = () => fileInputRef.current?.click();
 
   return (
-    <div className="min-h-screen bg-[#f5f7ff] text-ink">
-      <div className="page-bg activation-bg min-h-screen">
+    <div className="flex min-h-screen flex-col bg-[#f5f7ff] text-ink">
+      <div className="page-bg activation-bg flex min-h-screen flex-1 flex-col">
         <GlassNavbar brand={homeData.brand ?? { name: '心镜', en: 'HeartMirror' }} items={navItems} />
 
-        <main className="mx-auto flex w-full max-w-6xl flex-col px-6 py-8 sm:py-10">
+        <main className="mx-auto flex min-h-[calc(100svh-4.5rem)] w-full max-w-6xl flex-1 flex-col px-6 py-8 sm:py-10">
           <div className="mb-5 flex items-center justify-between gap-4">
             <button
               type="button"
@@ -357,7 +357,7 @@ export default function MessageConversationPage() {
             </div>
           </div>
 
-          <GlassCard className="flex min-h-[calc(100svh-11rem)] flex-1 flex-col overflow-hidden p-0">
+          <GlassCard className="flex min-h-0 flex-1 flex-col overflow-hidden p-0 [&>div]:flex [&>div]:min-h-0 [&>div]:flex-1 [&>div]:flex-col">
             {loading ? (
               <div className="flex flex-1 items-center justify-center p-8 text-slate-500">
                 正在加载会话…
@@ -398,7 +398,7 @@ export default function MessageConversationPage() {
                   </p>
                 </header>
 
-                <div className="flex flex-1 flex-col bg-white/30">
+                <div className="flex min-h-0 flex-1 flex-col bg-white/30">
                   <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-5">
                     {conversation.messages.length > 0 ? (
                       conversation.messages.map((message) => (
@@ -529,7 +529,7 @@ export default function MessageConversationPage() {
                     <div ref={bottomRef} />
                   </div>
 
-                  <div className="border-t border-white/50 bg-white/75 p-4 sm:p-5">
+                  <div className="mt-auto shrink-0 border-t border-white/50 bg-white/80 p-4 backdrop-blur-sm sm:p-5">
                     <div className="mb-3 min-h-5 text-xs text-slate-500">
                       {isTyping ? (
                         <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-blue-600">

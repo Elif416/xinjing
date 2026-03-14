@@ -108,11 +108,11 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f7ff] text-ink">
-      <div className="page-bg activation-bg min-h-screen">
+    <div className="flex min-h-screen flex-col bg-[#f5f7ff] text-ink">
+      <div className="page-bg activation-bg flex min-h-screen flex-1 flex-col">
         <GlassNavbar brand={homeData.brand ?? { name: '心镜', en: 'HeartMirror' }} items={navItems} />
 
-        <main className="mx-auto flex w-full max-w-5xl flex-col px-6 py-8 sm:py-10">
+        <main className="mx-auto flex min-h-[calc(100svh-4.5rem)] w-full max-w-5xl flex-1 flex-col px-6 py-8 sm:py-10">
           <section className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.28em] text-slate-500">Messages</p>
@@ -148,7 +148,7 @@ export default function MessagesPage() {
             </GlassCard>
           ) : null}
 
-          <GlassCard className="mt-6 gap-4 p-3 sm:p-4">
+          <GlassCard className="mt-6 flex min-h-0 flex-1 gap-4 p-3 sm:p-4 [&>div]:flex [&>div]:min-h-0 [&>div]:flex-1 [&>div]:flex-col">
             <div className="flex flex-col gap-3 px-2 py-1 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2 text-sm font-medium text-ink">
                 <MessageCircleMore className="h-4 w-4 text-blue-500" />
@@ -172,7 +172,7 @@ export default function MessagesPage() {
               </div>
             </div>
 
-            <div className="flex flex-col divide-y divide-white/50">
+            <div className="flex min-h-0 flex-1 flex-col divide-y divide-white/50 overflow-y-auto">
               {loading ? (
                 Array.from({ length: 4 }).map((_, index) => (
                   <div key={`message-skeleton-${index}`} className="flex items-center gap-4 px-3 py-4">
