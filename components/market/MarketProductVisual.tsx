@@ -20,41 +20,53 @@ type MarketProductVisualProps = {
 
 type VisualTheme = {
   icon: LucideIcon;
-  gradient: string;
-  halo: string;
-  accent: string;
+  surface: string;
+  orb: string;
+  chip: string;
+  iconWrap: string;
+  iconColor: string;
 };
 
 const visualThemeBySlug: Record<string, VisualTheme> = {
   'standee-custom': {
     icon: Layers3,
-    gradient: 'from-violet-500/80 via-fuchsia-400/65 to-sky-300/80',
-    halo: 'bg-violet-400/40',
-    accent: 'text-violet-700'
+    surface: 'from-slate-50 via-violet-50 to-sky-100',
+    orb: 'bg-violet-300/40',
+    chip: 'border-violet-200 bg-violet-100/90 text-violet-900',
+    iconWrap: 'border-violet-200/80 bg-violet-100/90',
+    iconColor: 'text-violet-800'
   },
   'acrylic-custom': {
     icon: Sparkles,
-    gradient: 'from-cyan-400/80 via-sky-300/70 to-indigo-400/75',
-    halo: 'bg-cyan-300/45',
-    accent: 'text-sky-700'
+    surface: 'from-slate-50 via-cyan-50 to-sky-100',
+    orb: 'bg-cyan-300/40',
+    chip: 'border-cyan-200 bg-cyan-100/90 text-cyan-900',
+    iconWrap: 'border-cyan-200/80 bg-cyan-100/90',
+    iconColor: 'text-cyan-800'
   },
   'picture-book-custom': {
     icon: BookOpen,
-    gradient: 'from-emerald-400/75 via-teal-300/70 to-cyan-200/75',
-    halo: 'bg-emerald-300/45',
-    accent: 'text-emerald-700'
+    surface: 'from-slate-50 via-emerald-50 to-teal-100',
+    orb: 'bg-emerald-300/40',
+    chip: 'border-emerald-200 bg-emerald-100/90 text-emerald-900',
+    iconWrap: 'border-emerald-200/80 bg-emerald-100/90',
+    iconColor: 'text-emerald-800'
   },
   'canvas-art-custom': {
     icon: Palette,
-    gradient: 'from-amber-400/80 via-orange-300/75 to-rose-300/75',
-    halo: 'bg-amber-300/45',
-    accent: 'text-amber-700'
+    surface: 'from-slate-50 via-amber-50 to-orange-100',
+    orb: 'bg-amber-300/40',
+    chip: 'border-amber-200 bg-amber-100/90 text-amber-900',
+    iconWrap: 'border-amber-200/80 bg-amber-100/90',
+    iconColor: 'text-amber-800'
   },
   'cotton-doll-custom': {
     icon: Package,
-    gradient: 'from-rose-400/75 via-pink-300/75 to-violet-300/75',
-    halo: 'bg-pink-300/45',
-    accent: 'text-rose-700'
+    surface: 'from-slate-50 via-rose-50 to-pink-100',
+    orb: 'bg-rose-300/40',
+    chip: 'border-rose-200 bg-rose-100/90 text-rose-900',
+    iconWrap: 'border-rose-200/80 bg-rose-100/90',
+    iconColor: 'text-rose-800'
   }
 };
 
@@ -72,39 +84,45 @@ export function MarketProductVisual({
   return (
     <div
       className={clsx(
-        'relative overflow-hidden rounded-[32px] border border-white/55 bg-white/60 shadow-[0_24px_70px_rgba(15,23,42,0.12)]',
+        'relative overflow-hidden rounded-[32px] border border-slate-200/80 bg-gradient-to-br shadow-[0_20px_60px_rgba(15,23,42,0.08)]',
+        theme.surface,
         isHero ? 'min-h-[340px] p-6 sm:min-h-[420px] sm:p-8' : 'min-h-[220px] p-5'
       )}
     >
-      <div className={clsx('absolute inset-0 bg-gradient-to-br', theme.gradient)} />
-      <div className={clsx('absolute right-[-4rem] top-[-4rem] h-40 w-40 rounded-full blur-3xl', theme.halo)} />
-      <div className={clsx('absolute bottom-[-5rem] left-[-3rem] h-48 w-48 rounded-full blur-3xl', theme.halo)} />
+      <div className={clsx('absolute right-[-3rem] top-[-3rem] h-36 w-36 rounded-full blur-3xl', theme.orb)} />
+      <div className={clsx('absolute bottom-[-4rem] left-[-2rem] h-44 w-44 rounded-full blur-3xl', theme.orb)} />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.95),transparent_48%)]" />
 
       <div className="relative z-10 flex h-full flex-col justify-between">
         <div className="flex flex-wrap gap-2">
           {labels.slice(0, isHero ? 3 : 2).map((label) => (
             <span
               key={label}
-              className="rounded-full border border-white/55 bg-white/72 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm"
+              className={clsx(
+                'rounded-full border px-3 py-1 text-xs font-semibold shadow-sm',
+                theme.chip
+              )}
             >
               {label}
             </span>
           ))}
         </div>
 
-        <div className="flex items-end justify-between gap-4">
-          <div className="max-w-[70%]">
-            <p className="text-lg font-semibold tracking-tight text-white drop-shadow-sm sm:text-2xl">
-              {title}
-            </p>
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <div className="rounded-[28px] border border-white/80 bg-white/88 px-4 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:px-5 sm:py-5">
+            <p className="text-lg font-semibold tracking-tight text-slate-950 sm:text-2xl">{title}</p>
             {subtitle ? (
-              <p className="mt-2 text-sm leading-6 text-white/90 sm:text-[15px]">{subtitle}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700 sm:text-[15px]">{subtitle}</p>
             ) : null}
           </div>
 
-          <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-[28px] border border-white/55 bg-white/78 shadow-[0_18px_40px_rgba(255,255,255,0.28)] backdrop-blur-xl sm:h-24 sm:w-24">
-            <div className={clsx('absolute inset-3 rounded-[20px] bg-white/60 blur-lg', theme.halo)} />
-            <Icon className={clsx('relative h-9 w-9 sm:h-11 sm:w-11', theme.accent)} />
+          <div
+            className={clsx(
+              'relative flex h-20 w-20 shrink-0 items-center justify-center rounded-[28px] border shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:h-24 sm:w-24',
+              theme.iconWrap
+            )}
+          >
+            <Icon className={clsx('h-9 w-9 sm:h-11 sm:w-11', theme.iconColor)} />
           </div>
         </div>
       </div>
