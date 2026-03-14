@@ -31,9 +31,9 @@ type ConversationParticipantRow = {
   conversationid: number;
   userid: number | null;
   joinedat: string | null;
-  lastreadmessageid: number | null;
-  lastreadat: string | null;
-  deletedat: string | null;
+  lastreadmessageid?: number | null;
+  lastreadat?: string | null;
+  deletedat?: string | null;
 };
 
 type ConversationMessageRow = {
@@ -45,8 +45,8 @@ type ConversationMessageRow = {
   fileurl: string | null;
   replyto: number | null;
   createdat: string | null;
-  recalledat: string | null;
-  recalledby: number | null;
+  recalledat?: string | null;
+  recalledby?: number | null;
 };
 
 type AttachmentRecord = {
@@ -66,8 +66,11 @@ type ConversationPreviewData = {
   unreadTotal: number;
 };
 
-const PARTICIPANT_SELECT_BASE = 'conversationid,userid,joinedat,lastreadmessageid,lastreadat';
-const PARTICIPANT_SELECT_WITH_DELETE = `${PARTICIPANT_SELECT_BASE},deletedat`;
+const PARTICIPANT_SELECT_BASE = 'conversationid,userid,joinedat';
+const PARTICIPANT_READ_SELECT = 'lastreadmessageid,lastreadat';
+const MESSAGE_SELECT_BASE =
+  'messageid,conversationid,senderid,content,mediatype,fileurl,replyto,createdat';
+const MESSAGE_SELECT_WITH_RECALL = `${MESSAGE_SELECT_BASE},recalledat,recalledby`;
 const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? 'pixiv-images';
 const PRIMARY_USER_ACCOUNT = process.env.AUTH_EMAIL?.trim() || 'heartmirror@app.local';
 const PRIMARY_USER_NAME =
@@ -76,6 +79,8 @@ const MIMO_ACCOUNT = 'mimo@heartmirror.local';
 const MIMO_NAME = 'Mimo';
 const MESSAGE_IMAGE_LIMIT = 8 * 1024 * 1024;
 let deletedAtColumnSupport: boolean | null = null;
+let participantReadColumnsSupport: boolean | null = null;
+let messageRecallColumnsSupport: boolean | null = null;
 
 export async function listMessageConversations(): Promise<ConversationsListPayload> {
   const currentUser = await ensurePrimaryUser();
@@ -187,18 +192,20 @@ export async function sendConversationMessage(
     const messageId = await getNextId('conversationmessages', 'messageid');
     const createdAt = new Date().toISOString();
 
-    const { error } = await supabaseAdmin.from('conversationmessages').insert({
-      messageid: messageId,
-      conversationid: conversationId,
-      senderid: currentUser.userid,
-      content,
-      mediatype: uploadedPath ? 'image' : null,
-      fileurl: uploadedPath || null,
-      replyto: replyToId,
-      createdat: createdAt,
-      recalledat: null,
-      recalledby: null
-    });
+    const { error } = await supabaseAdmin
+      .from('conversationmessages')
+      .insert(
+        await buildMessageInsertRow({
+          messageId,
+          conversationId,
+          senderId: currentUser.userid,
+          content,
+          mediaType: uploadedPath ? 'image' : null,
+          fileUrl: uploadedPath || null,
+          replyTo: replyToId,
+          createdAt
+        })
+      );
 
     if (error) {
       throw new Error(`发送消息失败：${error.message}`);
@@ -233,9 +240,7 @@ export async function recallConversationMessage(conversationId: number, messageI
 
   const { data, error } = await supabaseAdmin
     .from('conversationmessages')
-    .select(
-      'messageid,conversationid,senderid,content,mediatype,fileurl,replyto,createdat,recalledat,recalledby'
-    )
+    .select(await getMessageSelectColumns())
     .eq('conversationid', conversationId)
     .eq('messageid', messageId)
     .maybeSingle();
@@ -255,6 +260,12 @@ export async function recallConversationMessage(conversationId: number, messageI
 
   if (row.recalledat) {
     throw new Error('这条消息已经撤回了。');
+  }
+
+  if (!(await supportsMessageRecallColumns())) {
+    throw new Error(
+      '当前数据库还没完成消息未读/撤回升级，请先运行 20260313235500_messages_unread_recall.sql。'
+    );
   }
 
   const recalledAt = new Date().toISOString();
@@ -326,7 +337,7 @@ async function loadConversationPreviews(currentUserId: number): Promise<Conversa
     throw new Error(`加载会话列表失败：${memberError.message}`);
   }
 
-  const memberships = ((memberRows ?? []) as ConversationParticipantRow[]).filter(
+  const memberships = ((memberRows ?? []) as unknown as ConversationParticipantRow[]).filter(
     (row) => !row.deletedat
   );
   const conversationIds = uniqueNumbers(memberships.map((row) => row.conversationid));
@@ -357,7 +368,7 @@ async function loadConversationPreviews(currentUserId: number): Promise<Conversa
   }
 
   const conversations = (rows ?? []) as ConversationRow[];
-  const participants = ((participantRows ?? []) as ConversationParticipantRow[]).filter(
+  const participants = ((participantRows ?? []) as unknown as ConversationParticipantRow[]).filter(
     (row) => !row.deletedat
   );
   const counterpartIds = uniqueNumbers(
@@ -436,9 +447,7 @@ async function loadConversationMessages(
 ): Promise<ConversationMessage[]> {
   const { data, error } = await supabaseAdmin
     .from('conversationmessages')
-    .select(
-      'messageid,conversationid,senderid,content,mediatype,fileurl,replyto,createdat,recalledat,recalledby'
-    )
+    .select(await getMessageSelectColumns())
     .eq('conversationid', conversationId)
     .order('createdat', { ascending: true })
     .order('messageid', { ascending: true });
@@ -447,7 +456,7 @@ async function loadConversationMessages(
     throw new Error(`加载消息失败：${error.message}`);
   }
 
-  const rows = (data ?? []) as ConversationMessageRow[];
+  const rows = (data ?? []) as unknown as ConversationMessageRow[];
   const senderIds = uniqueNumbers(rows.map((row) => row.senderid));
   const userMap = await loadUsersMap(senderIds);
   const rowMap = new Map(rows.map((row) => [row.messageid, row]));
@@ -490,7 +499,7 @@ async function getConversationContext(conversationId: number, currentUserId: num
     throw new Error(`加载会话成员失败：${participantError.message}`);
   }
 
-  const participants = ((participantRows ?? []) as ConversationParticipantRow[]).filter(
+  const participants = ((participantRows ?? []) as unknown as ConversationParticipantRow[]).filter(
     (item) => !item.deletedat
   );
   const counterpartId = participants.find(
@@ -646,18 +655,20 @@ async function ensureMimoGreeting(conversationId: number) {
   const messageId = await getNextId('conversationmessages', 'messageid');
   const createdAt = new Date().toISOString();
 
-  const { error: insertError } = await supabaseAdmin.from('conversationmessages').insert({
-    messageid: messageId,
-    conversationid: conversationId,
-    senderid: mimo.userid,
-    content: '嗨！欢迎来到心镜平台！',
-    mediatype: null,
-    fileurl: null,
-    replyto: null,
-    createdat: createdAt,
-    recalledat: null,
-    recalledby: null
-  });
+  const { error: insertError } = await supabaseAdmin
+    .from('conversationmessages')
+    .insert(
+      await buildMessageInsertRow({
+        messageId,
+        conversationId,
+        senderId: mimo.userid,
+        content: '嗨！欢迎来到心镜平台！',
+        mediaType: null,
+        fileUrl: null,
+        replyTo: null,
+        createdAt
+      })
+    );
 
   if (insertError) {
     throw new Error(`初始化示例消息失败：${insertError.message}`);
@@ -772,6 +783,7 @@ async function loadMessageStats(
 ) {
   const latestMessageMap = new Map<number, ConversationMessageRow>();
   const unreadCountMap = new Map<number, number>();
+  const supportsReadState = await supportsParticipantReadColumns();
 
   if (conversationIds.length === 0) {
     return { latestMessageMap, unreadCountMap };
@@ -779,9 +791,7 @@ async function loadMessageStats(
 
   const { data, error } = await supabaseAdmin
     .from('conversationmessages')
-    .select(
-      'messageid,conversationid,senderid,content,mediatype,fileurl,replyto,createdat,recalledat,recalledby'
-    )
+    .select(await getMessageSelectColumns())
     .in('conversationid', conversationIds)
     .order('createdat', { ascending: false })
     .order('messageid', { ascending: false });
@@ -790,7 +800,7 @@ async function loadMessageStats(
     throw new Error(`加载消息统计失败：${error.message}`);
   }
 
-  for (const row of (data ?? []) as ConversationMessageRow[]) {
+  for (const row of (data ?? []) as unknown as ConversationMessageRow[]) {
     const conversationId = Number(row.conversationid);
 
     if (!Number.isFinite(conversationId)) {
@@ -801,11 +811,11 @@ async function loadMessageStats(
       latestMessageMap.set(conversationId, row);
     }
 
-    const lastReadMessageId = lastReadMessageIdMap.get(conversationId) ?? 0;
     if (
+      supportsReadState &&
       row.senderid !== currentUserId &&
       !row.recalledat &&
-      row.messageid > lastReadMessageId
+      row.messageid > (lastReadMessageIdMap.get(conversationId) ?? 0)
     ) {
       unreadCountMap.set(conversationId, (unreadCountMap.get(conversationId) ?? 0) + 1);
     }
@@ -924,6 +934,10 @@ async function markConversationAsRead(
   userId: number,
   lastMessageId: number
 ) {
+  if (!(await supportsParticipantReadColumns())) {
+    return;
+  }
+
   const { error } = await supabaseAdmin
     .from('conversationparticipants')
     .update({
@@ -936,6 +950,25 @@ async function markConversationAsRead(
   if (error) {
     throw new Error(`更新已读状态失败：${error.message}`);
   }
+}
+
+async function supportsParticipantReadColumns() {
+  if (participantReadColumnsSupport !== null) {
+    return participantReadColumnsSupport;
+  }
+
+  const { error } = await supabaseAdmin
+    .from('conversationparticipants')
+    .select(PARTICIPANT_READ_SELECT)
+    .limit(1);
+
+  if (error && isMissingParticipantReadColumnError(error.message)) {
+    participantReadColumnsSupport = false;
+    return false;
+  }
+
+  participantReadColumnsSupport = true;
+  return true;
 }
 
 async function supportsDeletedAtColumn() {
@@ -957,31 +990,54 @@ async function supportsDeletedAtColumn() {
   return true;
 }
 
-async function listParticipantsByUser(userId: number) {
-  if (await supportsDeletedAtColumn()) {
-    return supabaseAdmin
-      .from('conversationparticipants')
-      .select(PARTICIPANT_SELECT_WITH_DELETE)
-      .eq('userid', userId);
+async function supportsMessageRecallColumns() {
+  if (messageRecallColumnsSupport !== null) {
+    return messageRecallColumnsSupport;
   }
 
+  const { error } = await supabaseAdmin
+    .from('conversationmessages')
+    .select('recalledat,recalledby')
+    .limit(1);
+
+  if (error && isMissingMessageRecallColumnError(error.message)) {
+    messageRecallColumnsSupport = false;
+    return false;
+  }
+
+  messageRecallColumnsSupport = true;
+  return true;
+}
+
+async function getParticipantSelectColumns() {
+  const columns = [PARTICIPANT_SELECT_BASE];
+
+  if (await supportsParticipantReadColumns()) {
+    columns.push(PARTICIPANT_READ_SELECT);
+  }
+
+  if (await supportsDeletedAtColumn()) {
+    columns.push('deletedat');
+  }
+
+  return columns.join(',');
+}
+
+async function getMessageSelectColumns() {
+  return (await supportsMessageRecallColumns()) ? MESSAGE_SELECT_WITH_RECALL : MESSAGE_SELECT_BASE;
+}
+
+async function listParticipantsByUser(userId: number) {
   return supabaseAdmin
     .from('conversationparticipants')
-    .select(PARTICIPANT_SELECT_BASE)
+    .select(await getParticipantSelectColumns())
     .eq('userid', userId);
 }
 
 async function listParticipantsByConversationIds(conversationIds: number[]) {
-  if (await supportsDeletedAtColumn()) {
-    return supabaseAdmin
-      .from('conversationparticipants')
-      .select(PARTICIPANT_SELECT_WITH_DELETE)
-      .in('conversationid', conversationIds);
-  }
-
   return supabaseAdmin
     .from('conversationparticipants')
-    .select(PARTICIPANT_SELECT_BASE)
+    .select(await getParticipantSelectColumns())
     .in('conversationid', conversationIds);
 }
 
@@ -1046,24 +1102,69 @@ async function restoreDeletedParticipantsForConversation(conversationId: number)
 }
 
 async function buildParticipantInsertRow(conversationId: number, userId: number, joinedAt: string) {
-  if (await supportsDeletedAtColumn()) {
-    return {
-      conversationid: conversationId,
-      userid: userId,
-      joinedat: joinedAt,
-      lastreadmessageid: null,
-      lastreadat: null,
-      deletedat: null
-    };
-  }
-
-  return {
+  const row: {
+    conversationid: number;
+    userid: number;
+    joinedat: string;
+    lastreadmessageid?: null;
+    lastreadat?: null;
+    deletedat?: null;
+  } = {
     conversationid: conversationId,
     userid: userId,
-    joinedat: joinedAt,
-    lastreadmessageid: null,
-    lastreadat: null
+    joinedat: joinedAt
   };
+
+  if (await supportsParticipantReadColumns()) {
+    row.lastreadmessageid = null;
+    row.lastreadat = null;
+  }
+
+  if (await supportsDeletedAtColumn()) {
+    row.deletedat = null;
+  }
+
+  return row;
+}
+
+async function buildMessageInsertRow(input: {
+  messageId: number;
+  conversationId: number;
+  senderId: number;
+  content: string;
+  mediaType: string | null;
+  fileUrl: string | null;
+  replyTo: number | null;
+  createdAt: string;
+}) {
+  const row: {
+    messageid: number;
+    conversationid: number;
+    senderid: number;
+    content: string;
+    mediatype: string | null;
+    fileurl: string | null;
+    replyto: number | null;
+    createdat: string;
+    recalledat?: null;
+    recalledby?: null;
+  } = {
+    messageid: input.messageId,
+    conversationid: input.conversationId,
+    senderid: input.senderId,
+    content: input.content,
+    mediatype: input.mediaType,
+    fileurl: input.fileUrl,
+    replyto: input.replyTo,
+    createdat: input.createdAt
+  };
+
+  if (await supportsMessageRecallColumns()) {
+    row.recalledat = null;
+    row.recalledby = null;
+  }
+
+  return row;
 }
 
 async function restoreConversationParticipants(conversationId: number) {
@@ -1232,4 +1333,18 @@ function isArtistRole(value: string | null | undefined) {
 
 function isMissingDeletedAtError(message: string | undefined) {
   return typeof message === 'string' && /conversationparticipants\.deletedat/.test(message);
+}
+
+function isMissingParticipantReadColumnError(message: string | undefined) {
+  return (
+    typeof message === 'string' &&
+    /conversationparticipants\.(lastreadmessageid|lastreadat)/.test(message)
+  );
+}
+
+function isMissingMessageRecallColumnError(message: string | undefined) {
+  return (
+    typeof message === 'string' &&
+    /conversationmessages\.(recalledat|recalledby)/.test(message)
+  );
 }
