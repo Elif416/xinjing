@@ -86,13 +86,13 @@
         "title": "心镜 物",
         "description": "将数字情感延伸至实体纪念品，打通线上线下体验。",
         "image": "/pic/wu.png",
-        "href": "/workshop"
+        "href": "/market"
       },
       {
         "title": "情感版权集市 & 企业定制",
         "description": "为创作者与品牌提供可持续的情感资产共创与授权合作空间。",
         "image": "/mock-ecosystem.svg",
-        "href": "/market"
+        "href": "/workshop"
       }
     ]
   },
