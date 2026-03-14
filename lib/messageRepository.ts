@@ -66,6 +66,8 @@ type ConversationPreviewData = {
   unreadTotal: number;
 };
 
+const PARTICIPANT_SELECT_BASE = 'conversationid,userid,joinedat,lastreadmessageid,lastreadat';
+const PARTICIPANT_SELECT_WITH_DELETE = `${PARTICIPANT_SELECT_BASE},deletedat`;
 const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? 'pixiv-images';
 const PRIMARY_USER_ACCOUNT = process.env.AUTH_EMAIL?.trim() || 'heartmirror@app.local';
 const PRIMARY_USER_NAME =
@@ -73,6 +75,7 @@ const PRIMARY_USER_NAME =
 const MIMO_ACCOUNT = 'mimo@heartmirror.local';
 const MIMO_NAME = 'Mimo';
 const MESSAGE_IMAGE_LIMIT = 8 * 1024 * 1024;
+let deletedAtColumnSupport: boolean | null = null;
 
 export async function listMessageConversations(): Promise<ConversationsListPayload> {
   const currentUser = await ensurePrimaryUser();
@@ -293,6 +296,10 @@ export async function deleteConversationForCurrentUser(conversationId: number) {
   const currentUser = await ensurePrimaryUser();
   await assertConversationMembership(conversationId, currentUser.userid);
 
+  if (!(await supportsDeletedAtColumn())) {
+    throw new Error('当前数据库还没完成消息删除升级，请先运行 20260314002000_messages_delete_visibility.sql。');
+  }
+
   const { error } = await supabaseAdmin
     .from('conversationparticipants')
     .update({
@@ -311,10 +318,9 @@ export async function deleteConversationForCurrentUser(conversationId: number) {
 }
 
 async function loadConversationPreviews(currentUserId: number): Promise<ConversationPreviewData> {
-  const { data: memberRows, error: memberError } = await supabaseAdmin
-    .from('conversationparticipants')
-    .select('conversationid,userid,joinedat,lastreadmessageid,lastreadat,deletedat')
-    .eq('userid', currentUserId);
+  const memberResult = await listParticipantsByUser(currentUserId);
+  const memberRows = memberResult.data;
+  const memberError = memberResult.error;
 
   if (memberError) {
     throw new Error(`加载会话列表失败：${memberError.message}`);
@@ -339,10 +345,7 @@ async function loadConversationPreviews(currentUserId: number): Promise<Conversa
         .select('conversationid,conversationtype,title,directkey,createdby,createdat,updatedat')
         .in('conversationid', conversationIds)
         .order('updatedat', { ascending: false }),
-      supabaseAdmin
-        .from('conversationparticipants')
-        .select('conversationid,userid,joinedat,lastreadmessageid,lastreadat,deletedat')
-        .in('conversationid', conversationIds)
+      listParticipantsByConversationIds(conversationIds)
     ]);
 
   if (conversationError) {
@@ -354,7 +357,9 @@ async function loadConversationPreviews(currentUserId: number): Promise<Conversa
   }
 
   const conversations = (rows ?? []) as ConversationRow[];
-  const participants = (participantRows ?? []) as ConversationParticipantRow[];
+  const participants = ((participantRows ?? []) as ConversationParticipantRow[]).filter(
+    (row) => !row.deletedat
+  );
   const counterpartIds = uniqueNumbers(
     participants
       .filter((row) => row.userid && row.userid !== currentUserId)
@@ -469,10 +474,7 @@ async function getConversationContext(conversationId: number, currentUserId: num
         .select('conversationid,conversationtype,title,directkey,createdby,createdat,updatedat')
         .eq('conversationid', conversationId)
         .maybeSingle(),
-      supabaseAdmin
-        .from('conversationparticipants')
-        .select('conversationid,userid,joinedat,lastreadmessageid,lastreadat,deletedat')
-        .eq('conversationid', conversationId)
+      listParticipantsByConversationIds([conversationId])
     ]);
 
   if (rowError) {
@@ -488,7 +490,9 @@ async function getConversationContext(conversationId: number, currentUserId: num
     throw new Error(`加载会话成员失败：${participantError.message}`);
   }
 
-  const participants = (participantRows ?? []) as ConversationParticipantRow[];
+  const participants = ((participantRows ?? []) as ConversationParticipantRow[]).filter(
+    (item) => !item.deletedat
+  );
   const counterpartId = participants.find(
     (item) => item.userid && item.userid !== currentUserId
   )?.userid;
@@ -559,22 +563,8 @@ async function ensureDirectConversation(leftUserId: number, rightUserId: number)
   const { error: insertParticipantsError } = await supabaseAdmin
     .from('conversationparticipants')
     .insert([
-      {
-        conversationid: conversationId,
-        userid: leftUserId,
-        joinedat: createdAt,
-        lastreadmessageid: null,
-        lastreadat: null,
-        deletedat: null
-      },
-      {
-        conversationid: conversationId,
-        userid: rightUserId,
-        joinedat: createdAt,
-        lastreadmessageid: null,
-        lastreadat: null,
-        deletedat: null
-      }
+      await buildParticipantInsertRow(conversationId, leftUserId, createdAt),
+      await buildParticipantInsertRow(conversationId, rightUserId, createdAt)
     ]);
 
   if (insertParticipantsError) {
@@ -586,12 +576,7 @@ async function ensureDirectConversation(leftUserId: number, rightUserId: number)
 }
 
 async function ensureConversationParticipant(conversationId: number, userId: number) {
-  const { data, error } = await supabaseAdmin
-    .from('conversationparticipants')
-    .select('conversationid,userid,deletedat')
-    .eq('conversationid', conversationId)
-    .eq('userid', userId)
-    .maybeSingle();
+  const { data, error } = await getParticipantMembership(conversationId, userId);
 
   if (error) {
     throw new Error(`读取会话成员失败：${error.message}`);
@@ -602,11 +587,7 @@ async function ensureConversationParticipant(conversationId: number, userId: num
   }
 
   if (data?.conversationid) {
-    const { error: restoreError } = await supabaseAdmin
-      .from('conversationparticipants')
-      .update({ deletedat: null })
-      .eq('conversationid', conversationId)
-      .eq('userid', userId);
+    const { error: restoreError } = await restoreDeletedParticipant(conversationId, userId);
 
     if (restoreError) {
       throw new Error(`恢复会话失败：${restoreError.message}`);
@@ -615,14 +596,9 @@ async function ensureConversationParticipant(conversationId: number, userId: num
     return;
   }
 
-  const { error: insertError } = await supabaseAdmin.from('conversationparticipants').insert({
-    conversationid: conversationId,
-    userid: userId,
-    joinedat: new Date().toISOString(),
-    lastreadmessageid: null,
-    lastreadat: null,
-    deletedat: null
-  });
+  const { error: insertError } = await supabaseAdmin
+    .from('conversationparticipants')
+    .insert(await buildParticipantInsertRow(conversationId, userId, new Date().toISOString()));
 
   if (insertError) {
     throw new Error(`补充会话成员失败：${insertError.message}`);
@@ -751,13 +727,7 @@ async function assertUserExists(userId: number) {
 }
 
 async function assertConversationMembership(conversationId: number, userId: number) {
-  const { data, error } = await supabaseAdmin
-    .from('conversationparticipants')
-    .select('conversationid,userid')
-    .eq('conversationid', conversationId)
-    .eq('userid', userId)
-    .is('deletedat', null)
-    .maybeSingle();
+  const { data, error } = await getActiveParticipantMembership(conversationId, userId);
 
   if (error) {
     throw new Error(`校验会话权限失败：${error.message}`);
@@ -958,11 +928,136 @@ async function markConversationAsRead(
   }
 }
 
-async function restoreConversationParticipants(conversationId: number) {
+async function supportsDeletedAtColumn() {
+  if (deletedAtColumnSupport !== null) {
+    return deletedAtColumnSupport;
+  }
+
   const { error } = await supabaseAdmin
+    .from('conversationparticipants')
+    .select('deletedat')
+    .limit(1);
+
+  if (error && isMissingDeletedAtError(error.message)) {
+    deletedAtColumnSupport = false;
+    return false;
+  }
+
+  deletedAtColumnSupport = true;
+  return true;
+}
+
+async function listParticipantsByUser(userId: number) {
+  if (await supportsDeletedAtColumn()) {
+    return supabaseAdmin
+      .from('conversationparticipants')
+      .select(PARTICIPANT_SELECT_WITH_DELETE)
+      .eq('userid', userId);
+  }
+
+  return supabaseAdmin
+    .from('conversationparticipants')
+    .select(PARTICIPANT_SELECT_BASE)
+    .eq('userid', userId);
+}
+
+async function listParticipantsByConversationIds(conversationIds: number[]) {
+  if (await supportsDeletedAtColumn()) {
+    return supabaseAdmin
+      .from('conversationparticipants')
+      .select(PARTICIPANT_SELECT_WITH_DELETE)
+      .in('conversationid', conversationIds);
+  }
+
+  return supabaseAdmin
+    .from('conversationparticipants')
+    .select(PARTICIPANT_SELECT_BASE)
+    .in('conversationid', conversationIds);
+}
+
+async function getParticipantMembership(conversationId: number, userId: number) {
+  if (await supportsDeletedAtColumn()) {
+    return supabaseAdmin
+      .from('conversationparticipants')
+      .select('conversationid,userid,deletedat')
+      .eq('conversationid', conversationId)
+      .eq('userid', userId)
+      .maybeSingle();
+  }
+
+  return supabaseAdmin
+    .from('conversationparticipants')
+    .select('conversationid,userid')
+    .eq('conversationid', conversationId)
+    .eq('userid', userId)
+    .maybeSingle();
+}
+
+async function getActiveParticipantMembership(conversationId: number, userId: number) {
+  if (await supportsDeletedAtColumn()) {
+    return supabaseAdmin
+      .from('conversationparticipants')
+      .select('conversationid,userid')
+      .eq('conversationid', conversationId)
+      .eq('userid', userId)
+      .is('deletedat', null)
+      .maybeSingle();
+  }
+
+  return supabaseAdmin
+    .from('conversationparticipants')
+    .select('conversationid,userid')
+    .eq('conversationid', conversationId)
+    .eq('userid', userId)
+    .maybeSingle();
+}
+
+async function restoreDeletedParticipant(conversationId: number, userId: number) {
+  if (!(await supportsDeletedAtColumn())) {
+    return { error: null };
+  }
+
+  return supabaseAdmin
+    .from('conversationparticipants')
+    .update({ deletedat: null })
+    .eq('conversationid', conversationId)
+    .eq('userid', userId);
+}
+
+async function restoreDeletedParticipantsForConversation(conversationId: number) {
+  if (!(await supportsDeletedAtColumn())) {
+    return { error: null };
+  }
+
+  return supabaseAdmin
     .from('conversationparticipants')
     .update({ deletedat: null })
     .eq('conversationid', conversationId);
+}
+
+async function buildParticipantInsertRow(conversationId: number, userId: number, joinedAt: string) {
+  if (await supportsDeletedAtColumn()) {
+    return {
+      conversationid: conversationId,
+      userid: userId,
+      joinedat: joinedAt,
+      lastreadmessageid: null,
+      lastreadat: null,
+      deletedat: null
+    };
+  }
+
+  return {
+    conversationid: conversationId,
+    userid: userId,
+    joinedat: joinedAt,
+    lastreadmessageid: null,
+    lastreadat: null
+  };
+}
+
+async function restoreConversationParticipants(conversationId: number) {
+  const { error } = await restoreDeletedParticipantsForConversation(conversationId);
 
   if (error) {
     throw new Error(`恢复会话显示失败：${error.message}`);
@@ -1111,4 +1206,8 @@ function uniqueNumbers(values: Array<number | null | undefined>) {
 
 function isArtistRole(value: string | null | undefined) {
   return value?.trim().toLowerCase() === 'artist';
+}
+
+function isMissingDeletedAtError(message: string | undefined) {
+  return typeof message === 'string' && /conversationparticipants\.deletedat/.test(message);
 }
