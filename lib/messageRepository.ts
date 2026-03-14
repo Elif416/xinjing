@@ -527,11 +527,7 @@ async function getConversationContext(conversationId: number, currentUserId: num
 
 async function ensureDirectConversation(leftUserId: number, rightUserId: number) {
   const directKey = buildDirectKey(leftUserId, rightUserId);
-  const { data, error } = await supabaseAdmin
-    .from('conversations')
-    .select('conversationid')
-    .eq('directkey', directKey)
-    .maybeSingle();
+  const { data, error } = await findDirectConversationByKey(directKey);
 
   if (error) {
     throw new Error(`创建会话失败：${error.message}`);
@@ -557,6 +553,20 @@ async function ensureDirectConversation(leftUserId: number, rightUserId: number)
   });
 
   if (insertConversationError) {
+    if (isDirectConversationConflictError(insertConversationError)) {
+      const { data: existing, error: existingError } = await findDirectConversationByKey(directKey);
+
+      if (existingError) {
+        throw new Error(`创建会话失败：${existingError.message}`);
+      }
+
+      if (existing?.conversationid) {
+        await ensureConversationParticipant(existing.conversationid, leftUserId);
+        await ensureConversationParticipant(existing.conversationid, rightUserId);
+        return existing.conversationid;
+      }
+    }
+
     throw new Error(`创建会话失败：${insertConversationError.message}`);
   }
 
@@ -1125,6 +1135,18 @@ function mapConversationMessage(
         }
       : undefined
   };
+}
+
+async function findDirectConversationByKey(directKey: string) {
+  return supabaseAdmin
+    .from('conversations')
+    .select('conversationid')
+    .eq('directkey', directKey)
+    .maybeSingle();
+}
+
+function isDirectConversationConflictError(error: { code?: string | null; message?: string | null }) {
+  return error.code === '23505' || /conversations_directkey_unique|duplicate key value/i.test(error.message ?? '');
 }
 
 function buildDirectKey(leftUserId: number, rightUserId: number) {
