@@ -20,6 +20,7 @@ export type MarketFaq = {
 export type MarketProduct = {
   productId: number;
   slug: string;
+  imagePath: string;
   title: string;
   subtitle: string;
   summary: string;
@@ -40,6 +41,7 @@ const marketProducts: MarketProduct[] = [
   {
     productId: 5101,
     slug: 'standee-custom',
+    imagePath: '/pic/lipai.png',
     title: '立牌定制',
     subtitle: '把角色、回忆与情绪立起来，变成桌面上可被看见的陪伴。',
     summary: '适合 OC、同人应援、纪念礼物与桌搭陈列。',
@@ -103,38 +105,39 @@ const marketProducts: MarketProduct[] = [
   {
     productId: 5102,
     slug: 'acrylic-custom',
-    title: '亚克力定制',
-    subtitle: '适合做成挂件、砖、票夹和小型摆件，把故事装进更轻巧的日常物件。',
-    summary: '轻量周边向定制，适合送礼、应援与活动纪念。',
+    imagePath: '/pic/mingxinpian.png',
+    title: '卡片定制',
+    subtitle: '把照片、文字与情绪做成可随身携带的纪念卡，适合收藏、送礼与活动留念。',
+    summary: '适合照片卡、纪念卡、透卡与活动物料，偏轻便礼物向。',
     description:
-      '围绕“轻便、耐看、易携带”来设计成品形态。可以根据你的使用场景在挂件、摆件、手机支架和亚克力砖之间切换方案。',
+      '围绕“轻便、耐看、适合随身展示”来设计成品。可以根据你的用途在照片卡、透卡、闪卡和套组卡之间切换方案，兼顾纪念感与收藏感。',
     leadTime: '设计确认后 10-14 天发货',
     stock: 24,
     basePrice: 69,
-    badges: ['支持挂件/砖/支架', '可选透明边与镭射', '轻礼物向'],
-    materials: ['高透亚克力', '彩印覆膜', '可选五金配件'],
-    deliverables: ['成品 1 件', '效果确认图', '防磨包装'],
-    scenes: ['活动物料', '轻周边', '旅行伴手礼'],
-    serviceSteps: ['确认用途与风格', '选择形态与尺寸', '输出裁切与挂点方案', '确认成品后发货'],
+    badges: ['支持照片卡 / 透卡', '可选镭射与烫银', '轻礼物向'],
+    materials: ['高质感卡纸', '覆膜工艺', '可选镭射 / 烫银'],
+    deliverables: ['成品卡片 1 组', '效果确认图', '防磨包装'],
+    scenes: ['活动物料', '纪念礼物', '旅行伴手礼'],
+    serviceSteps: ['确认用途与风格', '选择卡型与尺寸', '输出版式与工艺方案', '确认成品后发货'],
     specGroups: [
       {
         id: 'format',
-        label: '成品形态',
-        helper: '不同形态对应不同的使用场景。',
+        label: '卡片类型',
+        helper: '不同卡型适合不同的展示与收藏场景。',
         options: [
-          { id: 'charm', label: '亚克力挂件', description: '适合包挂与钥匙圈', priceDelta: 0 },
-          { id: 'brick', label: '亚克力砖', description: '更适合桌面展示与收藏', priceDelta: 42 },
-          { id: 'stand', label: '手机支架', description: '兼顾实用与视觉效果', priceDelta: 58 }
+          { id: 'photo', label: '照片卡', description: '适合人像、纪念照与轻收藏', priceDelta: 0 },
+          { id: 'clear', label: '透卡', description: '更轻透，适合叠景和光影感', priceDelta: 22 },
+          { id: 'set', label: '套组卡', description: '适合做成系列纪念组合', priceDelta: 48 }
         ]
       },
       {
         id: 'size',
         label: '尺寸',
-        helper: '越大的尺寸越适合复杂图案。',
+        helper: '越大的尺寸越适合复杂排版与细节展示。',
         options: [
-          { id: 'small', label: '小号', description: '便携，适合简洁构图', priceDelta: 0 },
-          { id: 'medium', label: '中号', description: '平衡便携与细节', priceDelta: 18 },
-          { id: 'large', label: '大号', description: '适合纪念款与活动款', priceDelta: 34 }
+          { id: 'small', label: '小号', description: '便携，适合单人或简洁构图', priceDelta: 0 },
+          { id: 'medium', label: '中号', description: '平衡便携与细节呈现', priceDelta: 18 },
+          { id: 'large', label: '大号', description: '适合纪念版与多元素排版', priceDelta: 34 }
         ]
       },
       {
@@ -142,30 +145,31 @@ const marketProducts: MarketProduct[] = [
         label: '特殊工艺',
         helper: '工艺会影响闪耀感与收藏感。',
         options: [
-          { id: 'clear', label: '标准透明', description: '最适合日常通用', priceDelta: 0 },
+          { id: 'matte', label: '哑膜', description: '观感克制，适合高级感路线', priceDelta: 0 },
           { id: 'holo', label: '镭射闪膜', description: '在光线下更有层次', priceDelta: 20 },
-          { id: 'frost', label: '磨砂边处理', description: '整体观感更柔和高级', priceDelta: 28 }
+          { id: 'foil', label: '烫银 / 烫金', description: '更适合纪念标题与边框强调', priceDelta: 28 }
         ]
       }
     ],
     faqs: [
       {
-        question: '挂件五金可以选择颜色吗？',
-        answer: '可以，常规提供银色、金色和黑色，若有特殊配件需求可联系客服说明。'
+        question: '可以做照片卡或明信片吗？',
+        answer: '可以，卡片定制支持照片卡、明信片、透卡和系列卡组，客服会先帮你确认用途。'
       },
       {
         question: '适合做活动赠品吗？',
-        answer: '非常适合，亚克力定制的轻量版本便于批量生产和活动现场派发。'
+        answer: '很适合，卡片类成品轻便、易打包，也便于活动现场派发与交换。'
       },
       {
         question: '是否支持同图不同工艺打样比较？',
-        answer: '支持，可先沟通预算，客服会帮助你比对透明、镭射、磨砂等效果差异。'
+        answer: '支持，可先沟通预算，客服会帮助你比对哑膜、镭射、烫银等效果差异。'
       }
     ]
   },
   {
     productId: 5103,
     slug: 'picture-book-custom',
+    imagePath: '/pic/huiben.png',
     title: '绘本定制',
     subtitle: '将情感片段串成故事，做成一本属于你们自己的小型出版物。',
     summary: '适合纪念故事、节日礼物、成长记录与角色世界观设定集。',
@@ -229,6 +233,7 @@ const marketProducts: MarketProduct[] = [
   {
     productId: 5104,
     slug: 'canvas-art-custom',
+    imagePath: '/pic/huazuo.png',
     title: '实体画作定制',
     subtitle: '把数字草图落到真实材质上，让作品拥有墙面与空间中的存在感。',
     summary: '适合家居装饰、展陈礼物、收藏级纪念画作。',
@@ -292,6 +297,7 @@ const marketProducts: MarketProduct[] = [
   {
     productId: 5105,
     slug: 'cotton-doll-custom',
+    imagePath: '/pic/fumo.png',
     title: '棉花娃娃定制',
     subtitle: '将角色气质与配色转化成柔软的实体形象，适合长期陪伴与收藏。',
     summary: '适合 OC、品牌吉祥物、纪念型角色实体化。',

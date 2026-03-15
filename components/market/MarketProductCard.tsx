@@ -27,6 +27,7 @@ export function MarketProductCard({ product }: MarketProductCardProps) {
           slug={product.slug}
           title={product.title}
           subtitle={product.subtitle}
+          imagePath={product.imagePath}
           labels={product.badges}
         />
 
