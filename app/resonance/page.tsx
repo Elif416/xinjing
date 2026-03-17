@@ -1,7 +1,7 @@
 'use client';
 
 import type { ChangeEvent } from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useReducedMotion, type Transition } from 'framer-motion';
 import { Navigation, Plus, Search, Sparkles } from 'lucide-react';
 
@@ -181,6 +181,7 @@ export default function ResonancePage() {
   const [favoritePending, setFavoritePending] = useState(false);
 
   const shouldReduceMotion = useReducedMotion();
+  const deferredQuery = useDeferredValue(query);
   const addressInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null);
@@ -300,13 +301,35 @@ export default function ResonancePage() {
   }, [selectedPostId, loadPostDetail]);
 
   const filteredPosts = useMemo(() => {
-    const trimmed = query.trim().toLowerCase();
+    const trimmed = deferredQuery.trim().toLowerCase();
     if (!trimmed) return posts;
     return posts.filter((post) => [post.title, post.content, post.address, post.township, post.authorName, post.visibility === 'private' ? '私密 private' : '公开 public'].join(' ').toLowerCase().includes(trimmed));
-  }, [posts, query]);
+  }, [deferredQuery, posts]);
 
   const modalTransition: Transition = shouldReduceMotion ? { duration: 0 } : { type: 'spring', damping: 26, stiffness: 240 };
-  const focus = geoResult ? { lng: geoResult.lng, lat: geoResult.lat, label: geoResult.label } : null;
+  const focus = useMemo(
+    () => (geoResult ? { lng: geoResult.lng, lat: geoResult.lat, label: geoResult.label } : null),
+    [geoResult?.label, geoResult?.lat, geoResult?.lng]
+  );
+  const mapPostsSignature = useMemo(
+    () =>
+      filteredPosts
+        .map((post) =>
+          [
+            post.id,
+            post.lng,
+            post.lat,
+            post.visibility,
+            post.title,
+            post.address,
+            post.createdAt,
+            post.commentCount,
+            post.favoriteCount
+          ].join('|')
+        )
+        .join('~'),
+    [filteredPosts]
+  );
 
   const handleLocate = async () => {
     if (!addressInput.trim()) return setFormError('请输入要定位的镇或街道地址。');
@@ -440,10 +463,11 @@ export default function ResonancePage() {
               <GlassCard className="glass-card--dark w-full gap-3 border-white/10 xl:hidden"><p className="text-xs uppercase tracking-[0.2em] text-blue-100/60">Resonance Stats</p><p className="text-3xl font-semibold text-white">{posts.length}</p><p className="text-xs text-blue-100/70">{DEFAULT_STATS_LABEL}</p></GlassCard>
             </aside>
             <section className="order-1 flex xl:order-2">
-              <div className="relative min-h-[640px] w-full overflow-hidden rounded-[36px] border border-white/10 bg-[#0a1024]/80 shadow-[0_40px_120px_rgba(6,10,25,0.55)] backdrop-blur-[10px] sm:min-h-[760px] xl:h-full xl:min-h-0">
+              <div className="relative min-h-[640px] w-full overflow-hidden rounded-[36px] border border-white/10 bg-[#0a1024]/84 shadow-[0_26px_88px_rgba(6,10,25,0.45)] backdrop-blur-[6px] sm:min-h-[760px] xl:h-full xl:min-h-0">
                 <div className="absolute inset-0">
                   <ResonanceMap
                     posts={filteredPosts}
+                    postsSignature={mapPostsSignature}
                     focus={focus}
                     onSelect={handleMapSelect}
                     onReady={handleMapReady}
@@ -453,7 +477,7 @@ export default function ResonancePage() {
                 <div className="resonance-map-overlay absolute inset-0 z-[1]" />
                 <div className="absolute inset-x-0 bottom-0 z-[2] h-56 bg-gradient-to-t from-[#040817] via-[#040817]/80 to-transparent" />
                 <div className="absolute left-6 top-6 z-[3] flex max-w-lg flex-col gap-3">
-                  {mapError ? <GlassCard className="glass-card--dark border-amber-400/30 bg-[#071226]/85 text-amber-100"><p className="text-sm font-semibold text-white">地图服务初始化失败</p><p className="mt-2 text-sm leading-relaxed text-blue-100/80">{mapError}</p><p className="mt-3 text-xs text-blue-100/60">请检查高德 Key、安全密钥以及当前访问域名是否在白名单中。</p></GlassCard> : !mapReady ? <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-[#071226]/80 px-4 py-2 text-xs text-blue-100/80 backdrop-blur-[18px]"><Navigation className="h-3.5 w-3.5 text-blue-200/70" />地图服务连接中…</div> : null}
+                  {mapError ? <GlassCard className="glass-card--dark border-amber-400/30 bg-[#071226]/85 text-amber-100"><p className="text-sm font-semibold text-white">地图服务初始化失败</p><p className="mt-2 text-sm leading-relaxed text-blue-100/80">{mapError}</p><p className="mt-3 text-xs text-blue-100/60">请检查高德 Key、安全密钥以及当前访问域名是否在白名单中。</p></GlassCard> : !mapReady ? <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-[#071226]/84 px-4 py-2 text-xs text-blue-100/80 backdrop-blur-[10px]"><Navigation className="h-3.5 w-3.5 text-blue-200/70" />地图服务连接中…</div> : null}
                 </div>
                 <div className="absolute right-6 top-6 z-[3] hidden w-60 md:block"><GlassCard className="glass-card--dark w-full gap-3 border-white/10"><p className="text-xs uppercase tracking-[0.2em] text-blue-100/60">Resonance Stats</p><p className="text-3xl font-semibold text-white">{posts.length}</p><p className="text-xs text-blue-100/70">{DEFAULT_STATS_LABEL}</p></GlassCard></div>
                 <div className="absolute bottom-8 left-6 right-6 z-[3] max-w-2xl"><p className="text-xs uppercase tracking-[0.3em] text-blue-200/70">Resonance Map</p><h1 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">时空共鸣 · 集体记忆地图</h1><p className="mt-3 max-w-xl text-sm leading-relaxed text-blue-100/70 md:text-base">用低精度现实地图承载记忆帖文。你可以留下公开的地方故事，也能把私密片段留给自己。</p></div>

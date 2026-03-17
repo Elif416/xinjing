@@ -206,18 +206,18 @@ export default function Home() {
                     {/* 3D 玻璃卡片：整卡可点击跳转，对应后续页面 */}
                     <CardContainer className="h-full" containerClassName="py-0">
                       <CardBody className="glass-card clickable-card group/card relative isolate flex h-full w-full flex-col gap-4 rounded-3xl p-6 cursor-pointer">
-                        <CardItem translateZ={50} className="text-lg font-semibold text-ink">
+                        <CardItem translateZ={18} className="text-lg font-semibold text-ink">
                           {item.title}
                         </CardItem>
-                        <CardItem translateZ={60} as="p" className="text-sm leading-relaxed text-slate-600">
+                        <CardItem translateZ={22} as="p" className="text-sm leading-relaxed text-slate-600">
                           {item.description}
                         </CardItem>
-                        <CardItem translateZ={120} rotateX={24} rotateZ={-12} className="mt-4">
+                        <CardItem translateZ={40} rotateX={8} rotateZ={-3} className="mt-4">
                           <div className="overflow-hidden rounded-2xl border border-white/40 bg-white/70">
                             <img
                               src={item.image}
                               alt={item.title}
-                              className="mx-auto h-48 w-full object-cover rounded-2xl transition duration-300 group-hover/card:scale-[1.03] group-hover/card:shadow-xl"
+                              className="mx-auto h-48 w-full object-cover rounded-2xl transition duration-300 group-hover/card:scale-[1.02] group-hover/card:shadow-xl"
                               loading={index === 0 ? 'eager' : 'lazy'}
                               fetchPriority={index === 0 ? 'high' : 'auto'}
                               decoding="async"

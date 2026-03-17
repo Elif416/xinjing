@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
+
+import type { ResonancePost } from '@/lib/resonanceTypes';
 
 import { loadAmap } from './amap';
-import type { ResonancePost } from '@/lib/resonanceTypes';
 
 type MapFocus = {
   lng: number;
@@ -13,6 +14,7 @@ type MapFocus = {
 
 type ResonanceMapProps = {
   posts: ResonancePost[];
+  postsSignature: string;
   focus?: MapFocus | null;
   onSelect?: (selection: ResonanceMapSelection) => void;
   onReady?: () => void;
@@ -83,11 +85,13 @@ function groupPostsByLocation(posts: ResonancePost[]): MarkerGroup[] {
   posts.forEach((post) => {
     const key = `${post.lng.toFixed(6)}:${post.lat.toFixed(6)}`;
     const bucket = groups.get(key);
+
     if (bucket) {
       bucket.push(post);
-    } else {
-      groups.set(key, [post]);
+      return;
     }
+
+    groups.set(key, [post]);
   });
 
   return [...groups.entries()].map(([key, groupPosts]) => {
@@ -109,7 +113,7 @@ function groupPostsByLocation(posts: ResonancePost[]): MarkerGroup[] {
       markerTitle:
         sortedPosts.length > 1
           ? `${first.address || first.title || '该地点'}（${sortedPosts.length} 条）`
-          : first.title || first.address,
+          : first.title || first.address || '该地点',
       markerTone: tone
     };
   });
@@ -119,33 +123,40 @@ function buildMarkerContent(group: MarkerGroup) {
   const tone =
     group.markerTone === 'private'
       ? {
-          glow: 'rgba(216,180,254,0.45)',
-          aura: 'rgba(216,180,254,0.18)',
-          core: 'rgba(232,121,249,0.96)'
+          glow: 'rgba(216,180,254,0.34)',
+          aura: 'rgba(216,180,254,0.14)',
+          core: 'rgba(232,121,249,0.94)'
         }
       : group.markerTone === 'mixed'
         ? {
-            glow: 'rgba(251,191,36,0.5)',
-            aura: 'rgba(251,191,36,0.18)',
-            core: 'rgba(251,191,36,0.96)'
+            glow: 'rgba(251,191,36,0.38)',
+            aura: 'rgba(251,191,36,0.14)',
+            core: 'rgba(251,191,36,0.94)'
           }
         : {
-            glow: 'rgba(96,165,250,0.45)',
-            aura: 'rgba(96,165,250,0.18)',
-            core: 'rgba(96,165,250,0.96)'
+            glow: 'rgba(96,165,250,0.34)',
+            aura: 'rgba(96,165,250,0.14)',
+            core: 'rgba(96,165,250,0.94)'
           };
 
   const size = group.posts.length > 1 ? 26 : 20;
   const haloInset = group.posts.length > 1 ? -10 : -8;
   const badge =
     group.posts.length > 1
-      ? `<span style="position:absolute;right:-6px;top:-6px;display:flex;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:rgba(15,23,42,0.92);border:1px solid rgba(255,255,255,0.65);align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;">${group.posts.length}</span>`
+      ? `<span style="position:absolute;right:-7px;top:-7px;display:flex;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:rgba(15,23,42,0.92);border:1px solid rgba(255,255,255,0.65);align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;">${group.posts.length}</span>`
       : '';
 
-  return `<div style="position:relative;width:${size}px;height:${size}px;"><span style="position:absolute;inset:${haloInset}px;border-radius:999px;background:${tone.aura};box-shadow:0 0 18px ${tone.glow};"></span><span style="position:absolute;inset:0;border-radius:999px;background:${tone.core};border:3px solid rgba(255,255,255,0.95);box-shadow:0 0 24px ${tone.glow};"></span>${badge}</div>`;
+  return `<div style="position:relative;width:${size}px;height:${size}px;"><span style="position:absolute;inset:${haloInset}px;border-radius:999px;background:${tone.aura};box-shadow:0 0 14px ${tone.glow};"></span><span style="position:absolute;inset:0;border-radius:999px;background:${tone.core};border:3px solid rgba(255,255,255,0.95);box-shadow:0 0 18px ${tone.glow};"></span>${badge}</div>`;
 }
 
-export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: ResonanceMapProps) {
+function ResonanceMapInner({
+  posts,
+  postsSignature,
+  focus,
+  onSelect,
+  onReady,
+  onError
+}: ResonanceMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<AMapMapInstance | null>(null);
   const markersRef = useRef<AMapMarkerInstance[]>([]);
@@ -163,16 +174,6 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
     postsRef.current = posts;
   }, [posts]);
 
-  const markerSignature = useMemo(
-    () =>
-      posts
-        .map((post) =>
-          [post.id, post.lng, post.lat, post.visibility, post.title, post.address].join('|')
-        )
-        .join('~'),
-    [posts]
-  );
-
   useEffect(() => {
     selectionHandlerRef.current = onSelect;
   }, [onSelect]);
@@ -183,17 +184,19 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
         map.remove(previewRef.current);
         previewRef.current = null;
       }
+
       return;
     }
 
     const position: [number, number] = [nextFocus.lng, nextFocus.lat];
+
     if (!previewRef.current) {
       previewRef.current = new AMap.Marker({
         position,
         anchor: 'center',
         offset: new AMap.Pixel(-13, -13),
         content:
-          '<div style="position:relative;width:26px;height:26px;"><span style="position:absolute;inset:-9px;border-radius:999px;background:rgba(251,191,36,0.18);box-shadow:0 0 22px rgba(251,191,36,0.7);"></span><span style="position:absolute;inset:0;border-radius:999px;background:rgba(251,191,36,0.98);border:3px solid rgba(255,255,255,0.95);box-shadow:0 0 22px rgba(251,191,36,0.92);"></span></div>'
+          '<div style="position:relative;width:26px;height:26px;"><span style="position:absolute;inset:-9px;border-radius:999px;background:rgba(251,191,36,0.14);box-shadow:0 0 18px rgba(251,191,36,0.56);"></span><span style="position:absolute;inset:0;border-radius:999px;background:rgba(251,191,36,0.96);border:3px solid rgba(255,255,255,0.95);box-shadow:0 0 18px rgba(251,191,36,0.82);"></span></div>'
       });
       map.add(previewRef.current);
     } else {
@@ -241,6 +244,7 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
 
       try {
         const AMap = (await loadAmap({ key, security, plugins: AMAP_PLUGINS })) as AMapLike;
+
         if (disposed || !containerRef.current || mapRef.current) {
           return;
         }
@@ -260,6 +264,7 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
         map.addControl(new AMap.Scale());
         mapRef.current = map;
         onReady?.();
+
         requestAnimationFrame(() => map.resize());
         applyMarkers(map, AMap, postsRef.current);
         applyFocus(map, AMap, focusRef.current);
@@ -270,7 +275,9 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
         }
       } catch (error) {
         onError?.(
-          error instanceof Error ? error.message : '高德地图初始化失败，请检查 Key 与安全密钥配置。'
+          error instanceof Error
+            ? error.message
+            : '高德地图初始化失败，请检查 Key 与安全密钥配置。'
         );
       }
     }
@@ -281,6 +288,7 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
       disposed = true;
       resizeObserverRef.current?.disconnect();
       resizeObserverRef.current = null;
+
       if (mapRef.current) {
         mapRef.current.destroy();
         mapRef.current = null;
@@ -290,30 +298,51 @@ export function ResonanceMap({ posts, focus, onSelect, onReady, onError }: Reson
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) {
-      return;
-    }
-
-    if (markersRef.current.length > 0) {
-      map.remove(markersRef.current);
-      markersRef.current = [];
-    }
-
     const AMap = (window as Window & { AMap?: AMapLike }).AMap;
-    if (!AMap) {
+
+    if (!map || !AMap) {
       return;
     }
+
     applyMarkers(map, AMap, postsRef.current);
-  }, [markerSignature]);
+  }, [postsSignature]);
 
   useEffect(() => {
     const map = mapRef.current;
     const AMap = (window as Window & { AMap?: AMapLike }).AMap;
+
     if (!map || !AMap) {
       return;
     }
+
     applyFocus(map, AMap, focus ?? null);
   }, [focus]);
 
   return <div ref={containerRef} className="h-full w-full" />;
 }
+
+function isSameFocus(prevFocus?: MapFocus | null, nextFocus?: MapFocus | null) {
+  if (!prevFocus && !nextFocus) {
+    return true;
+  }
+
+  if (!prevFocus || !nextFocus) {
+    return false;
+  }
+
+  return (
+    prevFocus.lng === nextFocus.lng &&
+    prevFocus.lat === nextFocus.lat &&
+    prevFocus.label === nextFocus.label
+  );
+}
+
+export const ResonanceMap = memo(ResonanceMapInner, (prevProps, nextProps) => {
+  return (
+    prevProps.postsSignature === nextProps.postsSignature &&
+    isSameFocus(prevProps.focus, nextProps.focus) &&
+    prevProps.onSelect === nextProps.onSelect &&
+    prevProps.onReady === nextProps.onReady &&
+    prevProps.onError === nextProps.onError
+  );
+});
