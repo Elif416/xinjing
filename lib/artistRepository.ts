@@ -225,12 +225,13 @@ async function getArtistCoverImages(artistIds: number[]) {
     }
 
     const attachment = pickPrimaryAttachment(post.postattachments);
-    if (!attachment?.fileurl) {
+    const coverImage = getAttachmentThumbnailPublicUrl(attachment);
+
+    if (!coverImage) {
       continue;
     }
 
-    const preferredPath = attachment.thumbnailurl || attachment.fileurl;
-    coverByArtistId.set(authorId, getPublicImageUrl(preferredPath));
+    coverByArtistId.set(authorId, coverImage);
   }
 
   return coverByArtistId;
@@ -255,9 +256,7 @@ function mapArtistGridItem(artist: ArtistRecord, coverByArtistId: Map<number, st
 
 function mapPortfolioItem(post: PostRecord, index: number): ArtistPortfolioItem | null {
   const attachment = pickPrimaryAttachment(post.postattachments);
-  const image = attachment?.fileurl
-    ? getPublicImageUrl(attachment.thumbnailurl || attachment.fileurl)
-    : '';
+  const image = getAttachmentOriginalPublicUrl(attachment);
 
   if (!image) {
     return null;
@@ -293,6 +292,18 @@ function pickPrimaryAttachment(attachments: AttachmentRecord[] | null | undefine
   );
 
   return firstAttachment ?? null;
+}
+
+function getAttachmentThumbnailPublicUrl(attachment: AttachmentRecord | null | undefined) {
+  const preferredPath = attachment?.thumbnailurl || attachment?.fileurl;
+
+  return preferredPath ? getPublicImageUrl(preferredPath) : '';
+}
+
+function getAttachmentOriginalPublicUrl(attachment: AttachmentRecord | null | undefined) {
+  const preferredPath = attachment?.fileurl || attachment?.thumbnailurl;
+
+  return preferredPath ? getPublicImageUrl(preferredPath) : '';
 }
 
 function resolveArtistName(artist: ArtistRecord) {

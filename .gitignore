@@ -33,3 +33,6 @@ dist/
 
 # Vercel
 .vercel/
+
+# Supabase local temp
+supabase/.temp/
