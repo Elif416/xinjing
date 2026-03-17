@@ -2,8 +2,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { Image } from 'https://deno.land/x/imagescript@1.3.0/mod.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const DEFAULT_BUCKET = Deno.env.get('SUPABASE_STORAGE_BUCKET') ?? 'pixiv-images';
+const SERVICE_ROLE_KEY = Deno.env.get('SB_SERVICE_ROLE_KEY')!;
+const DEFAULT_BUCKET = Deno.env.get('STORAGE_BUCKET') ?? 'pixiv-images';
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
@@ -12,14 +12,14 @@ function toThumbnailPath(originalPath: string) {
   const extRe = /\.[a-zA-Z0-9]+$/;
 
   if (normalized.includes('/posts/')) {
-    return normalized.replace('/posts/', '/thumbnails/posts/').replace(extRe, '.webp');
+    return normalized.replace('/posts/', '/thumbnails/posts/').replace(extRe, '.png');
   }
 
   if (normalized.includes('/originals/')) {
-    return normalized.replace('/originals/', '/thumbnails/').replace(extRe, '.webp');
+    return normalized.replace('/originals/', '/thumbnails/').replace(extRe, '.png');
   }
 
-  return normalized.replace(extRe, '.webp');
+  return normalized.replace(extRe, '.png');
 }
 
 async function createThumbnail(bytes: Uint8Array) {
@@ -27,7 +27,7 @@ async function createThumbnail(bytes: Uint8Array) {
   const width = 300;
   const height = Math.max(1, Math.round((image.height / image.width) * width));
   image.resize(width, height);
-  return await image.encodeWEBP(80);
+  return await image.encode();
 }
 
 Deno.serve(async (req) => {
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     const thumbnailBytes = await createThumbnail(originalBytes);
 
     const { error: uploadError } = await supabase.storage.from(targetBucket).upload(thumbnailPath, thumbnailBytes, {
-      contentType: 'image/webp',
+      contentType: 'image/png',
       cacheControl: '3600',
       upsert: true
     });
