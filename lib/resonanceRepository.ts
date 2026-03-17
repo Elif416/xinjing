@@ -3,7 +3,6 @@
 import path from 'node:path';
 
 import { supabaseAdmin } from './supabaseAdmin';
-import { buildWebpThumbnail, toThumbnailPath } from './thumbnail';
 import type {
   ResonanceAttachment,
   ResonanceComment,
@@ -523,21 +522,7 @@ async function uploadResonanceAttachments(postId: number, files: UploadableFile[
 
       let thumbnailPath: string | null = null;
       if (item.mediaType === 'image') {
-        thumbnailPath = toThumbnailPath(filePath);
-        const thumbnailBuffer = await buildWebpThumbnail(buffer);
-        const { error: thumbError } = await supabaseAdmin.storage
-          .from(STORAGE_BUCKET)
-          .upload(thumbnailPath, thumbnailBuffer, {
-            contentType: 'image/webp',
-            cacheControl: '3600',
-            upsert: true
-          });
-
-        if (thumbError) {
-          throw new Error(`Failed to upload resonance thumbnail: ${thumbError.message}`);
-        }
-
-        uploadedPaths.push(thumbnailPath);
+        thumbnailPath = await generateThumbnailViaEdge(filePath);
       }
 
       rows.push({
@@ -893,6 +878,31 @@ async function syncFavoriteCount(postId: number, favoriteCount: number) {
     throw new Error(`Failed to sync resonance favorite count: ${error.message}`);
   }
 }
+
+async function generateThumbnailViaEdge(originalPath: string) {
+  const { data, error } = await supabaseAdmin.functions.invoke('generate-thumbnail', {
+    body: {
+      bucket: STORAGE_BUCKET,
+      originalPath
+    }
+  });
+
+  if (error) {
+    throw new Error(`Failed to generate resonance thumbnail: ${error.message}`);
+  }
+
+  const thumbnailPath =
+    data && typeof data === 'object' && 'thumbnailPath' in data
+      ? String((data as { thumbnailPath?: string }).thumbnailPath || '')
+      : '';
+
+  if (!thumbnailPath) {
+    throw new Error('Failed to generate resonance thumbnail: empty thumbnail path');
+  }
+
+  return thumbnailPath;
+}
+
 function normalizeVisitorKey(value: string) {
   const normalized = value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 48);
   return normalized || crypto.randomUUID();
