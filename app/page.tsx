@@ -123,7 +123,7 @@ export default function Home() {
           {/* 核心闭环区：Apple 式交错图文布局 */}
           <section className="mx-auto flex w-full max-w-6xl flex-col gap-20 px-6">
             {loopSections.length > 0 ? (
-              loopSections.map((section) => {
+              loopSections.map((section, index) => {
                 const isLeft = section.align === 'left';
                 const isCreation = section.id === 'creation';
                 const isActivation = section.id === 'activation';
@@ -135,7 +135,8 @@ export default function Home() {
                           src={section.image}
                           alt={section.title}
                           className="h-full w-full object-cover"
-                          loading="lazy"
+                          loading={index === 0 ? 'eager' : 'lazy'}
+                          fetchPriority={index < 2 ? 'high' : 'auto'}
                           decoding="async"
                         />
                       </div>
@@ -200,7 +201,7 @@ export default function Home() {
           <section id={commerce.id} className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 pb-16 scroll-mt-24">
             <div className="grid gap-6 md:grid-cols-2">
               {Array.isArray(commerce.items) && commerce.items.length > 0 ? (
-                commerce.items.map((item) => (
+                commerce.items.map((item, index) => (
                   <a key={item.title} href={item.href ?? '#'} className="block h-full">
                     {/* 3D 玻璃卡片：整卡可点击跳转，对应后续页面 */}
                     <CardContainer className="h-full" containerClassName="py-0">
@@ -217,7 +218,8 @@ export default function Home() {
                               src={item.image}
                               alt={item.title}
                               className="mx-auto h-48 w-full object-cover rounded-2xl transition duration-300 group-hover/card:scale-[1.03] group-hover/card:shadow-xl"
-                              loading="lazy"
+                              loading={index === 0 ? 'eager' : 'lazy'}
+                              fetchPriority={index === 0 ? 'high' : 'auto'}
                               decoding="async"
                             />
                           </div>

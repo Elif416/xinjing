@@ -18,6 +18,7 @@ type MarketProductVisualProps = {
   imagePath: string;
   labels?: string[];
   size?: 'card' | 'hero';
+  preload?: boolean;
 };
 
 type VisualTheme = {
@@ -78,7 +79,8 @@ export function MarketProductVisual({
   subtitle,
   imagePath,
   labels = [],
-  size = 'card'
+  size = 'card',
+  preload = false
 }: MarketProductVisualProps) {
   const theme = visualThemeBySlug[slug] ?? visualThemeBySlug['standee-custom'];
   const Icon = theme.icon;
@@ -139,7 +141,7 @@ export function MarketProductVisual({
                 fill
                 sizes="(min-width: 1024px) 420px, 100vw"
                 className="object-cover object-center"
-                priority
+                priority={isHero || preload}
               />
               <div className={clsx('absolute inset-0 bg-gradient-to-br', theme.overlay)} />
             </div>
@@ -163,6 +165,7 @@ export function MarketProductVisual({
           fill
           sizes="(min-width: 1280px) 380px, (min-width: 768px) 50vw, 100vw"
           className="object-cover object-center"
+          priority={preload}
         />
         <div className={clsx('absolute inset-0 bg-gradient-to-br', theme.overlay)} />
       </div>

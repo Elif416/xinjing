@@ -78,8 +78,8 @@ export default function MarketPage() {
             </div>
 
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {products.map((product) => (
-                <MarketProductCard key={product.slug} product={product} />
+              {products.map((product, index) => (
+                <MarketProductCard key={product.slug} product={product} preloadImage={index < 3} />
               ))}
             </div>
           </section>

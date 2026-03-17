@@ -212,7 +212,7 @@ export default function CreationPage() {
 
         void fetchArtistsPage(creationArtists.length, 'append');
       },
-      { rootMargin: '240px 0px' }
+      { rootMargin: '720px 0px' }
     );
 
     observer.observe(sentinel);
@@ -262,7 +262,7 @@ export default function CreationPage() {
             {/* Carousel 布局：横向滚动，移动端也保持轻量交互 */}
             <div className="flex gap-6 overflow-x-auto pb-2">
               {creationStories.length > 0 ? (
-                creationStories.map((story) => (
+                creationStories.map((story, index) => (
                   <Link
                     key={story.id}
                     href={story.href ?? `/creation/relay/${story.id}`}
@@ -278,7 +278,8 @@ export default function CreationPage() {
                           src={story.image}
                           alt={story.title}
                           className="h-36 w-full object-cover"
-                          loading="lazy"
+                          loading={index < 2 ? 'eager' : 'lazy'}
+                          fetchPriority={index < 2 ? 'high' : 'auto'}
                           decoding="async"
                         />
                       </div>
@@ -425,7 +426,7 @@ export default function CreationPage() {
                 </div>
               ) : creationArtists.length > 0 ? (
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {creationArtists.map((artist) => (
+                  {creationArtists.map((artist, index) => (
                     <ArtistCard
                       key={artist.id}
                       artist={{
@@ -438,6 +439,7 @@ export default function CreationPage() {
                         note: artist.intro,
                         href: artist.href
                       }}
+                      imagePriority={index < 6}
                       onOpen={(target) =>
                         setCreationModal({
                           title: target.name,

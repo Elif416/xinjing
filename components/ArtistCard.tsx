@@ -17,11 +17,12 @@ export type ArtistCardData = {
 export type ArtistCardProps = {
   artist: ArtistCardData;
   onOpen?: (artist: ArtistCardData) => void;
+  imagePriority?: boolean;
 };
 
 // ArtistCard：约稿中心画师卡片
 // 复用 GlassCard 玻璃样式，保证与首页风格一致
-export function ArtistCard({ artist, onOpen }: ArtistCardProps) {
+export function ArtistCard({ artist, onOpen, imagePriority = false }: ArtistCardProps) {
   const avatarText = artist.avatar ?? artist.name.slice(0, 1);
 
   const handleOpen = () => {
@@ -48,7 +49,8 @@ export function ArtistCard({ artist, onOpen }: ArtistCardProps) {
           alt={artist.name}
           className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           style={{ imageRendering: 'auto' }}
-          loading="lazy"
+          loading={imagePriority ? 'eager' : 'lazy'}
+          fetchPriority={imagePriority ? 'high' : 'auto'}
           decoding="async"
         />
       </div>

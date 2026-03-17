@@ -12,9 +12,10 @@ import { MarketProductVisual } from './MarketProductVisual';
 
 type MarketProductCardProps = {
   product: MarketProduct;
+  preloadImage?: boolean;
 };
 
-export function MarketProductCard({ product }: MarketProductCardProps) {
+export function MarketProductCard({ product, preloadImage = false }: MarketProductCardProps) {
   const maxPrice = getMarketProductMaxPrice(product);
 
   return (
@@ -29,6 +30,7 @@ export function MarketProductCard({ product }: MarketProductCardProps) {
           subtitle={product.subtitle}
           imagePath={product.imagePath}
           labels={product.badges}
+          preload={preloadImage}
         />
 
         <div className="space-y-3">

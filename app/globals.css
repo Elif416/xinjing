@@ -30,18 +30,16 @@ body {
 
 .page-bg::before {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(60% 40% at 20% 10%, rgba(120, 160, 255, 0.35), transparent 60%),
-    radial-gradient(50% 40% at 80% 20%, rgba(196, 168, 255, 0.28), transparent 60%),
-    radial-gradient(40% 35% at 45% 80%, rgba(255, 188, 214, 0.22), transparent 60%);
-  filter: blur(52px);
-  opacity: 0.75;
-  animation: glow-float 26s ease-in-out infinite;
-  transform: translateZ(0) scale(1.2);
-  will-change: transform;
+    radial-gradient(60% 40% at 20% 10%, rgba(120, 160, 255, 0.24), transparent 60%),
+    radial-gradient(50% 40% at 80% 20%, rgba(196, 168, 255, 0.18), transparent 60%),
+    radial-gradient(40% 35% at 45% 80%, rgba(255, 188, 214, 0.14), transparent 60%);
+  filter: blur(26px);
+  opacity: 0.58;
+  transform: translateZ(0) scale(1.06);
   z-index: 0;
 }
 
@@ -84,7 +82,7 @@ body {
     radial-gradient(60% 45% at 18% 18%, rgba(116, 154, 255, 0.4), transparent 60%),
     radial-gradient(50% 40% at 82% 24%, rgba(186, 160, 255, 0.32), transparent 60%),
     radial-gradient(45% 35% at 50% 82%, rgba(120, 200, 255, 0.2), transparent 60%);
-  opacity: 0.85;
+  opacity: 0.72;
 }
 
 /* Relay 详情页背景：深邃蓝色弥散光 + 轻微呼吸 */
@@ -97,10 +95,9 @@ body {
     radial-gradient(60% 45% at 20% 20%, rgba(64, 110, 255, 0.35), transparent 60%),
     radial-gradient(50% 40% at 80% 18%, rgba(120, 90, 255, 0.28), transparent 60%),
     radial-gradient(40% 35% at 50% 80%, rgba(40, 120, 255, 0.22), transparent 60%);
-  filter: blur(70px);
-  opacity: 0.75;
-  animation: relay-glow 28s ease-in-out infinite;
-  transform: translateZ(0) scale(1.15);
+  filter: blur(34px);
+  opacity: 0.58;
+  transform: translateZ(0) scale(1.05);
 }
 
 @keyframes relay-glow {
@@ -125,10 +122,9 @@ body {
     radial-gradient(55% 45% at 18% 18%, rgba(120, 160, 255, 0.35), transparent 60%),
     radial-gradient(50% 40% at 82% 22%, rgba(160, 190, 255, 0.28), transparent 60%),
     radial-gradient(45% 35% at 50% 80%, rgba(120, 210, 255, 0.22), transparent 60%);
-  filter: blur(60px);
-  opacity: 0.8;
-  animation: artist-breathe 24s ease-in-out infinite;
-  transform: translateZ(0) scale(1.15);
+  filter: blur(30px);
+  opacity: 0.62;
+  transform: translateZ(0) scale(1.05);
 }
 
 @keyframes artist-breathe {
@@ -153,16 +149,15 @@ body {
     radial-gradient(60% 45% at 20% 15%, rgba(48, 92, 255, 0.45), transparent 60%),
     radial-gradient(45% 40% at 80% 20%, rgba(120, 90, 255, 0.3), transparent 60%),
     radial-gradient(35% 30% at 50% 80%, rgba(40, 140, 255, 0.25), transparent 60%);
-  filter: blur(70px);
-  opacity: 0.75;
-  animation: activation-glow 26s ease-in-out infinite;
-  transform: translateZ(0) scale(1.2);
-  transition: opacity 0.8s ease, filter 0.8s ease;
+  filter: blur(34px);
+  opacity: 0.58;
+  transform: translateZ(0) scale(1.06);
+  transition: opacity 0.4s ease, filter 0.4s ease;
 }
 
 .activation-bg::after {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   background-image:
@@ -171,15 +166,14 @@ body {
     radial-gradient(1.5px 1.5px at 40% 70%, rgba(200, 230, 255, 0.25), transparent 60%),
     radial-gradient(1.5px 1.5px at 85% 60%, rgba(140, 190, 255, 0.25), transparent 60%),
     radial-gradient(1px 1px at 55% 45%, rgba(180, 220, 255, 0.2), transparent 60%);
-  opacity: 0.6;
-  animation: particle-drift 20s linear infinite;
+  opacity: 0.24;
   transform: translateZ(0);
   z-index: 0;
 }
 
 .activation-awakened::before {
-  opacity: 0.95;
-  filter: blur(60px);
+  opacity: 0.76;
+  filter: blur(40px);
 }
 
 @keyframes activation-glow {
@@ -237,11 +231,9 @@ body {
     radial-gradient(40% 30% at 15% 30%, rgba(120, 160, 255, 0.35), transparent 60%),
     radial-gradient(40% 30% at 85% 20%, rgba(216, 188, 255, 0.35), transparent 60%),
     radial-gradient(50% 40% at 50% 80%, rgba(255, 200, 220, 0.28), transparent 60%);
-  filter: blur(42px);
-  opacity: 0.9;
-  animation: hero-flow 18s ease-in-out infinite;
+  filter: blur(24px);
+  opacity: 0.62;
   transform: translateZ(0);
-  will-change: transform;
   z-index: 0;
 }
 
@@ -282,16 +274,16 @@ body {
   font-weight: 500;
   border: 1px solid rgba(255, 255, 255, 0.45);
   background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   transform: translateZ(0);
 }
 
 .glass-button:hover {
   transform: translate3d(0, -1px, 0);
-  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
 }
 
 .glass-button--primary {
@@ -317,26 +309,26 @@ body {
 .glass-card {
   position: relative;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.45)),
-    radial-gradient(70% 50% at 0% 0%, rgba(255, 255, 255, 0.7), transparent 60%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.58)),
+    radial-gradient(70% 50% at 0% 0%, rgba(255, 255, 255, 0.52), transparent 60%);
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow:
-    0 18px 50px rgba(15, 23, 42, 0.12),
-    0 6px 18px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+    0 14px 36px rgba(15, 23, 42, 0.1),
+    0 4px 14px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transform: translateZ(0);
-  transition: background-position 0.6s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  transition: background-position 0.4s ease, transform 0.25s ease, box-shadow 0.25s ease;
   background-size: 120% 120%, 140% 140%;
   background-position: 0% 0%, 100% 0%;
   overflow: hidden;
 }
 
 .glass-card:hover {
-  transform: translate3d(0, -2px, 0);
+  transform: translate3d(0, -1px, 0);
   box-shadow:
-    0 26px 70px rgba(15, 23, 42, 0.16),
-    0 10px 24px rgba(15, 23, 42, 0.1);
+    0 18px 48px rgba(15, 23, 42, 0.12),
+    0 8px 18px rgba(15, 23, 42, 0.08);
   background-position: 20% -10%, 80% 10%;
 }
 
@@ -353,17 +345,17 @@ body {
   position: absolute;
   inset: -30%;
   background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.7), transparent 60%);
-  filter: blur(12px);
+  filter: blur(8px);
   transform: translateZ(0);
 }
 
 /* 玻璃面板：用于交错的大图模块 */
 .glass-panel {
   position: relative;
-  background: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transform: translateZ(0);
 }
 
@@ -551,15 +543,14 @@ body {
     radial-gradient(60% 45% at 20% 15%, rgba(70, 120, 255, 0.35), transparent 60%),
     radial-gradient(45% 40% at 80% 20%, rgba(160, 110, 255, 0.28), transparent 60%),
     radial-gradient(40% 35% at 50% 80%, rgba(60, 170, 255, 0.22), transparent 60%);
-  filter: blur(80px);
-  opacity: 0.8;
-  animation: resonance-glow 28s ease-in-out infinite;
-  transform: translateZ(0) scale(1.2);
+  filter: blur(36px);
+  opacity: 0.62;
+  transform: translateZ(0) scale(1.08);
 }
 
 .resonance-bg::after {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   background-image:
@@ -568,8 +559,7 @@ body {
     radial-gradient(1.4px 1.4px at 40% 70%, rgba(220, 230, 255, 0.3), transparent 60%),
     radial-gradient(1.1px 1.1px at 85% 60%, rgba(160, 190, 255, 0.3), transparent 60%),
     radial-gradient(1px 1px at 55% 45%, rgba(180, 210, 255, 0.25), transparent 60%);
-  opacity: 0.6;
-  animation: resonance-stars 20s linear infinite;
+  opacity: 0.24;
   transform: translateZ(0);
   z-index: 0;
 }
@@ -655,10 +645,25 @@ body {
     radial-gradient(circle at var(--mel-x) var(--mel-y), var(--mel-color) 0%, transparent var(--mel-size)),
     radial-gradient(circle at var(--ser-x) var(--ser-y), var(--ser-color) 0%, transparent var(--ser-size)),
     radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.28), transparent 60%);
-  filter: blur(80px);
-  opacity: 0.95;
+  filter: blur(48px);
+  opacity: 0.82;
   transform: translateZ(0);
   will-change: background;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .emotion-slider {

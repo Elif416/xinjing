@@ -73,7 +73,7 @@ export function GlassNavbar({
   return (
     <header
       className={clsx(
-        'sticky top-0 z-[200] w-full border-b border-white/30 bg-white backdrop-blur-[20px]',
+        'sticky top-0 z-[200] w-full border-b border-white/40 bg-white/92 backdrop-blur-[12px]',
         className
       )}
     >
