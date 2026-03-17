@@ -5,6 +5,7 @@ export type ResonanceMediaType = 'image' | 'video';
 export type ResonanceAttachment = {
   id: number;
   url: string;
+  thumbnailUrl?: string;
   mediaType: ResonanceMediaType;
   sortOrder: number;
 };

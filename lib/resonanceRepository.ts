@@ -3,6 +3,7 @@
 import path from 'node:path';
 
 import { supabaseAdmin } from './supabaseAdmin';
+import { buildWebpThumbnail, toThumbnailPath } from './thumbnail';
 import type {
   ResonanceAttachment,
   ResonanceComment,
@@ -24,6 +25,7 @@ type AttachmentRow = {
   attachmentid: number;
   postid: number | null;
   fileurl: string | null;
+  thumbnailurl?: string | null;
   sortorder: number | null;
   mediatype: string | null;
   createdat?: string | null;
@@ -104,7 +106,7 @@ export type ResonanceViewer = {
 const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? 'pixiv-images';
 const RESONANCE_POST_SELECT = 'postid,userid,title,content,address,township,lng,lat,createdat';
 const GENERIC_POST_SELECT =
-  'postid,authorid,title,content,favoritecount,createdat,posttype,postattachments(attachmentid,postid,fileurl,sortorder,mediatype)';
+  'postid,authorid,title,content,favoritecount,createdat,posttype,postattachments(attachmentid,postid,fileurl,thumbnailurl,sortorder,mediatype)';
 const VISIBILITY_VALUES = new Set<ResonanceVisibility>(['public', 'private']);
 const MAX_ATTACHMENTS = 4;
 const MAX_IMAGE_SIZE = 12 * 1024 * 1024;
@@ -498,6 +500,7 @@ async function uploadResonanceAttachments(postId: number, files: UploadableFile[
       attachmentid: number;
       postid: number;
       fileurl: string;
+      thumbnailurl: string | null;
       sortorder: number;
       mediatype: ResonanceMediaType;
     }> = [];
@@ -517,10 +520,31 @@ async function uploadResonanceAttachments(postId: number, files: UploadableFile[
       }
 
       uploadedPaths.push(filePath);
+
+      let thumbnailPath: string | null = null;
+      if (item.mediaType === 'image') {
+        thumbnailPath = toThumbnailPath(filePath);
+        const thumbnailBuffer = await buildWebpThumbnail(buffer);
+        const { error: thumbError } = await supabaseAdmin.storage
+          .from(STORAGE_BUCKET)
+          .upload(thumbnailPath, thumbnailBuffer, {
+            contentType: 'image/webp',
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (thumbError) {
+          throw new Error(`Failed to upload resonance thumbnail: ${thumbError.message}`);
+        }
+
+        uploadedPaths.push(thumbnailPath);
+      }
+
       rows.push({
         attachmentid: nextAttachmentId + index,
         postid: postId,
         fileurl: filePath,
+        thumbnailurl: thumbnailPath,
         sortorder: index,
         mediatype: item.mediaType
       });
@@ -665,12 +689,19 @@ function mapAttachments(rows: AttachmentRow[] | null | undefined): ResonanceAtta
       (left, right) =>
         (left.sortorder ?? Number.MAX_SAFE_INTEGER) - (right.sortorder ?? Number.MAX_SAFE_INTEGER)
     )
-    .map((row) => ({
-      id: row.attachmentid,
-      url: getPublicMediaUrl(row.fileurl?.trim() || ''),
-      mediaType: row.mediatype === 'video' ? 'video' : 'image',
-      sortOrder: row.sortorder ?? 0
-    }));
+    .map((row) => {
+      const mediaType = row.mediatype === 'video' ? 'video' : 'image';
+      const originalUrl = getPublicMediaUrl(row.fileurl?.trim() || '');
+      const thumbnailUrl = row.thumbnailurl ? getPublicMediaUrl(row.thumbnailurl.trim()) : '';
+
+      return {
+        id: row.attachmentid,
+        url: mediaType === 'image' && thumbnailUrl ? thumbnailUrl : originalUrl,
+        thumbnailUrl: mediaType === 'image' ? thumbnailUrl || undefined : undefined,
+        mediaType,
+        sortOrder: row.sortorder ?? 0
+      };
+    });
 }
 
 function mapComment(row: ResonanceCommentRow, author: UserRow | undefined): ResonanceComment {

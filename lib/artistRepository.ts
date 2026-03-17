@@ -31,6 +31,7 @@ type ArtistRecord = {
 type AttachmentRecord = {
   attachmentid: number;
   fileurl: string | null;
+  thumbnailurl?: string | null;
   sortorder: number | null;
   mediatype: string | null;
 };
@@ -142,7 +143,7 @@ export async function getArtistDetail(id: string): Promise<ArtistDetailData | nu
   const [{ data: posts, error: postsError }, { data: plans, error: plansError }] = await Promise.all([
     supabaseAdmin
       .from('posts')
-      .select('postid,authorid,title,content,favoritecount,createdat,postattachments(attachmentid,fileurl,sortorder,mediatype)')
+      .select('postid,authorid,title,content,favoritecount,createdat,postattachments(attachmentid,fileurl,thumbnailurl,sortorder,mediatype)')
       .eq('authorid', artistId)
       .order('createdat', { ascending: false }),
     supabaseAdmin.from('commissionplans').select('*').eq('artistid', artistId).order('planid')
@@ -209,7 +210,7 @@ async function getArtistCoverImages(artistIds: number[]) {
 
   const { data, error } = await supabaseAdmin
     .from('posts')
-    .select('postid,authorid,createdat,postattachments(attachmentid,fileurl,sortorder,mediatype)')
+    .select('postid,authorid,createdat,postattachments(attachmentid,fileurl,thumbnailurl,sortorder,mediatype)')
     .in('authorid', artistIds)
     .order('createdat', { ascending: false });
 
@@ -228,7 +229,8 @@ async function getArtistCoverImages(artistIds: number[]) {
       continue;
     }
 
-    coverByArtistId.set(authorId, getPublicImageUrl(attachment.fileurl));
+    const preferredPath = attachment.thumbnailurl || attachment.fileurl;
+    coverByArtistId.set(authorId, getPublicImageUrl(preferredPath));
   }
 
   return coverByArtistId;
@@ -253,7 +255,9 @@ function mapArtistGridItem(artist: ArtistRecord, coverByArtistId: Map<number, st
 
 function mapPortfolioItem(post: PostRecord, index: number): ArtistPortfolioItem | null {
   const attachment = pickPrimaryAttachment(post.postattachments);
-  const image = attachment?.fileurl ? getPublicImageUrl(attachment.fileurl) : '';
+  const image = attachment?.fileurl
+    ? getPublicImageUrl(attachment.thumbnailurl || attachment.fileurl)
+    : '';
 
   if (!image) {
     return null;

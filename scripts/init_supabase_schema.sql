@@ -86,6 +86,7 @@ create table if not exists public.postattachments (
   postid integer references public.posts(postid) on delete cascade,
   mediatype text,
   fileurl text,
+  thumbnailurl text,
   sortorder integer
 );
 
