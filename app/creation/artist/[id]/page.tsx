@@ -42,7 +42,6 @@ export default function ArtistDetailPage() {
 
       try {
         const response = await fetch(`/api/artists/${params.id}`, {
-          cache: 'no-store',
           signal: controller.signal
         });
 

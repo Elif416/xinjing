@@ -90,6 +90,10 @@ create table if not exists public.postattachments (
   sortorder integer
 );
 
+create index if not exists postattachments_thumbnail_missing_idx
+  on public.postattachments (attachmentid)
+  where lower(coalesce(mediatype, '')) = 'image' and thumbnailurl is null;
+
 create table if not exists public.postcomments (
   commentid integer primary key,
   postid integer references public.posts(postid) on delete cascade,

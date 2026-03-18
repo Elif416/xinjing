@@ -61,7 +61,14 @@ type ArtistQueryOptions = {
 };
 
 const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? 'pixiv-images';
+const SUPABASE_PUBLIC_URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? '';
 const DEFAULT_ARTIST_IMAGE = '/mock-dream.svg';
+const ARTIST_GRID_THUMBNAIL = {
+  width: 640,
+  height: 640,
+  quality: 70,
+  resize: 'cover' as const
+};
 const PORTFOLIO_SIZE_PATTERN: ArtistPortfolioItem['size'][] = [
   'large',
   'wide',
@@ -295,13 +302,20 @@ function pickPrimaryAttachment(attachments: AttachmentRecord[] | null | undefine
 }
 
 function getAttachmentThumbnailPublicUrl(attachment: AttachmentRecord | null | undefined) {
-  const preferredPath = attachment?.thumbnailurl || attachment?.fileurl;
+  const thumbnailPath = normalizeStoragePath(attachment?.thumbnailurl);
 
-  return preferredPath ? getPublicImageUrl(preferredPath) : '';
+  if (thumbnailPath) {
+    return getPublicImageUrl(thumbnailPath);
+  }
+
+  const originalPath = normalizeStoragePath(attachment?.fileurl);
+
+  return originalPath ? getTransformedImageUrl(originalPath, ARTIST_GRID_THUMBNAIL) : '';
 }
 
 function getAttachmentOriginalPublicUrl(attachment: AttachmentRecord | null | undefined) {
-  const preferredPath = attachment?.fileurl || attachment?.thumbnailurl;
+  const preferredPath =
+    normalizeStoragePath(attachment?.fileurl) || normalizeStoragePath(attachment?.thumbnailurl);
 
   return preferredPath ? getPublicImageUrl(preferredPath) : '';
 }
@@ -406,5 +420,49 @@ function formatRating(value: number | null | undefined) {
 }
 
 function getPublicImageUrl(fileUrl: string) {
+  if (/^https?:\/\//i.test(fileUrl)) {
+    return fileUrl;
+  }
+
   return supabaseAdmin.storage.from(STORAGE_BUCKET).getPublicUrl(fileUrl).data.publicUrl;
+}
+
+function getTransformedImageUrl(
+  fileUrl: string,
+  options: { width: number; height?: number; quality?: number; resize?: 'cover' | 'contain' | 'fill' }
+) {
+  if (!SUPABASE_PUBLIC_URL || /^https?:\/\//i.test(fileUrl)) {
+    return getPublicImageUrl(fileUrl);
+  }
+
+  const url = new URL(
+    `/storage/v1/render/image/public/${STORAGE_BUCKET}/${fileUrl}`,
+    SUPABASE_PUBLIC_URL
+  );
+
+  url.searchParams.set('width', String(options.width));
+
+  if (options.height) {
+    url.searchParams.set('height', String(options.height));
+  }
+
+  if (options.quality) {
+    url.searchParams.set('quality', String(options.quality));
+  }
+
+  if (options.resize) {
+    url.searchParams.set('resize', options.resize);
+  }
+
+  return url.toString();
+}
+
+function normalizeStoragePath(value: string | null | undefined) {
+  const normalized = value?.trim() ?? '';
+
+  if (!normalized) {
+    return '';
+  }
+
+  return normalized.replace(/^\/+/, '');
 }

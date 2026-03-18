@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     const { data: rows, error: queryError } = await supabase
       .from('postattachments')
       .select('attachmentid,fileurl,mediatype,thumbnailurl')
-      .eq('mediatype', 'image')
+      .in('mediatype', ['image', 'Image'])
       .is('thumbnailurl', null)
       .not('fileurl', 'is', null)
       .order('attachmentid', { ascending: true })

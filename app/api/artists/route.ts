@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getArtistsPage } from '@/lib/artistRepository';
 
 export const dynamic = 'force-dynamic';
+export const preferredRegion = 'hnd1';
+
+const CACHE_CONTROL_HEADER = 'public, s-maxage=300, stale-while-revalidate=3600';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,13 +22,22 @@ export async function GET(request: NextRequest) {
       priceMax
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: {
+        'Cache-Control': CACHE_CONTROL_HEADER
+      }
+    });
   } catch (error) {
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Failed to load artists'
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Cache-Control': CACHE_CONTROL_HEADER
+        }
+      }
     );
   }
 }

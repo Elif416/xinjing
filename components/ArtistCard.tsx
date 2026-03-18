@@ -1,4 +1,5 @@
-﻿import React from 'react';
+import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { GlassCard } from './GlassCard';
@@ -43,15 +44,15 @@ export function ArtistCard({ artist, onOpen, imagePriority = false }: ArtistCard
         }
       }}
     >
-      <div className="overflow-hidden rounded-2xl border border-white/40 bg-white/70">
-        <img
+      <div className="relative h-44 overflow-hidden rounded-2xl border border-white/40 bg-white/70">
+        <Image
           src={artist.image}
           alt={artist.name}
-          className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-          style={{ imageRendering: 'auto' }}
-          loading={imagePriority ? 'eager' : 'lazy'}
-          fetchPriority={imagePriority ? 'high' : 'auto'}
-          decoding="async"
+          fill
+          priority={imagePriority}
+          quality={70}
+          sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
       </div>
 
@@ -70,7 +71,6 @@ export function ArtistCard({ artist, onOpen, imagePriority = false }: ArtistCard
         <p className="text-xs leading-relaxed text-slate-500">{artist.note}</p>
       ) : null}
 
-      {/* 悬浮按钮：卡片 hover 时出现，提示可进入作品集 */}
       {artist.href ? (
         <Link
           href={artist.href}
@@ -85,7 +85,6 @@ export function ArtistCard({ artist, onOpen, imagePriority = false }: ArtistCard
         </span>
       )}
 
-      {/* 额外高光边框，增强 hover 反馈 */}
       <span className="pointer-events-none absolute inset-0 rounded-3xl border border-white/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
     </GlassCard>
   );

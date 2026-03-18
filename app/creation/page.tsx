@@ -139,9 +139,7 @@ export default function CreationPage() {
       }
 
       try {
-        const response = await fetch(`/api/artists?${buildArtistsQuery(offset)}`, {
-          cache: 'no-store'
-        });
+        const response = await fetch(`/api/artists?${buildArtistsQuery(offset)}`);
 
         if (!response.ok) {
           throw new Error('画师数据加载失败');
@@ -439,7 +437,7 @@ export default function CreationPage() {
                         note: artist.intro,
                         href: artist.href
                       }}
-                      imagePriority={index < 6}
+                      imagePriority={index < 3}
                       onOpen={(target) =>
                         setCreationModal({
                           title: target.name,
