@@ -165,7 +165,7 @@ export async function getArtistDetail(id: string): Promise<ArtistDetailData | nu
   }
 
   const portfolio = ((posts ?? []) as PostRecord[])
-    .map((post, index) => mapPortfolioItem(post, index))
+    .map((post, index) => mapPortfolioItem(post, index, index === 0))
     .filter((item): item is ArtistPortfolioItem => Boolean(item));
 
   const services = ((plans ?? []) as CommissionPlanRecord[]).map(mapCommissionPlan);
@@ -261,9 +261,15 @@ function mapArtistGridItem(artist: ArtistRecord, coverByArtistId: Map<number, st
   };
 }
 
-function mapPortfolioItem(post: PostRecord, index: number): ArtistPortfolioItem | null {
+function mapPortfolioItem(
+  post: PostRecord,
+  index: number,
+  preserveOriginal: boolean
+): ArtistPortfolioItem | null {
   const attachment = pickPrimaryAttachment(post.postattachments);
-  const image = getAttachmentOriginalPublicUrl(attachment);
+  const image = preserveOriginal
+    ? getAttachmentOriginalPublicUrl(attachment)
+    : getAttachmentThumbnailPublicUrl(attachment);
 
   if (!image) {
     return null;

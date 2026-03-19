@@ -51,6 +51,7 @@ type ConversationMessageRow = {
 
 type AttachmentRecord = {
   fileurl: string | null;
+  thumbnailurl?: string | null;
   sortorder: number | null;
   mediatype: string | null;
 };
@@ -879,7 +880,7 @@ async function loadUserProfileMap(userIds: number[]) {
 
   const { data: posts, error: postError } = await supabaseAdmin
     .from('posts')
-    .select('authorid,createdat,postattachments(fileurl,sortorder,mediatype)')
+    .select('authorid,createdat,postattachments(fileurl,thumbnailurl,sortorder,mediatype)')
     .in('authorid', artistIds)
     .order('createdat', { ascending: false });
 
@@ -899,13 +900,14 @@ async function loadUserProfileMap(userIds: number[]) {
     }
 
     const attachment = pickPrimaryAttachment(row.postattachments);
-    if (!attachment?.fileurl) {
+    const avatarUrl = resolveAttachmentPublicUrl(attachment);
+    if (!avatarUrl) {
       continue;
     }
 
     map.set(artistId, {
       isArtist: true,
-      avatarUrl: getPublicFileUrl(attachment.fileurl)
+      avatarUrl
     });
   }
 
@@ -1307,9 +1309,15 @@ function getPublicFileUrl(fileUrl: string) {
   return supabaseAdmin.storage.from(STORAGE_BUCKET).getPublicUrl(fileUrl).data.publicUrl;
 }
 
+function resolveAttachmentPublicUrl(attachment: AttachmentRecord | null | undefined) {
+  const filePath = attachment?.fileurl?.trim() || attachment?.thumbnailurl?.trim() || '';
+
+  return filePath ? getPublicFileUrl(filePath) : '';
+}
+
 function pickPrimaryAttachment(items: AttachmentRecord[] | null | undefined) {
   return (items ?? [])
-    .filter((item) => item.fileurl)
+    .filter((item) => item.fileurl || item.thumbnailurl)
     .sort((left, right) => {
       const leftOrder = left.sortorder ?? Number.MAX_SAFE_INTEGER;
       const rightOrder = right.sortorder ?? Number.MAX_SAFE_INTEGER;
