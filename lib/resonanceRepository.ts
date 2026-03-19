@@ -69,6 +69,7 @@ type ResonanceFavoriteRow = {
 type ResonanceMeta = {
   socialPostId?: number;
   visibility: ResonanceVisibility;
+  favoriteCount: number;
   attachments: AttachmentRow[];
 };
 
@@ -104,8 +105,9 @@ export type ResonanceViewer = {
 
 const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? 'pixiv-images';
 const RESONANCE_POST_SELECT = 'postid,userid,title,content,address,township,lng,lat,createdat';
-const GENERIC_POST_SELECT =
-  'postid,authorid,title,content,favoritecount,createdat,posttype,postattachments(attachmentid,postid,fileurl,thumbnailurl,sortorder,mediatype)';
+const GENERIC_POST_META_SELECT = 'postid,favoritecount,posttype';
+const GENERIC_POST_WITH_ATTACHMENTS_SELECT =
+  'postid,favoritecount,posttype,postattachments(attachmentid,postid,fileurl,thumbnailurl,sortorder,mediatype)';
 const VISIBILITY_VALUES = new Set<ResonanceVisibility>(['public', 'private']);
 const MAX_ATTACHMENTS = 4;
 const MAX_IMAGE_SIZE = 12 * 1024 * 1024;
@@ -182,27 +184,24 @@ export async function listResonancePosts({
   const rows = (data ?? []) as ResonancePostRow[];
   const postIds = rows.map((row) => row.postid);
   const authorMap = await loadUsersMap(rows.map((row) => row.userid));
-  const metaMap = await loadResonanceMetaMap(postIds);
+  const metaMap = await loadResonanceMetaMap(postIds, { includeAttachments: false });
   const socialPostIds = [...metaMap.values()]
     .map((meta) => meta.socialPostId)
     .filter((value): value is number => Number.isFinite(value));
 
-  const [favoriteRows, commentRows] = await Promise.all([
-    loadFavoriteRows(socialPostIds),
-    loadCommentRows(socialPostIds)
+  const [viewerFavoriteRows, commentCountRows] = await Promise.all([
+    loadViewerFavoriteRows(socialPostIds, viewerUserId),
+    loadCommentCountRows(socialPostIds)
   ]);
 
-  const favoriteCountMap = countRowsByPostId(favoriteRows);
-  const commentCountMap = countRowsByPostId(commentRows);
+  const commentCountMap = countRowsByPostId(commentCountRows);
   const favoriteState = new Set<number>();
 
-  if (viewerUserId) {
-    favoriteRows.forEach((row) => {
-      if (row.postid && row.userid === viewerUserId) {
-        favoriteState.add(row.postid);
-      }
-    });
-  }
+  viewerFavoriteRows.forEach((row) => {
+    if (row.postid) {
+      favoriteState.add(row.postid);
+    }
+  });
 
   return rows
     .filter((row) => {
@@ -215,10 +214,10 @@ export async function listResonancePosts({
       const socialPostId = meta?.socialPostId;
 
       return mapResonancePost(row, authorMap.get(row.userid ?? -1), meta, {
-        favoriteCount: socialPostId ? favoriteCountMap.get(socialPostId) ?? 0 : 0,
+        favoriteCount: meta?.favoriteCount ?? 0,
         commentCount: socialPostId ? commentCountMap.get(socialPostId) ?? 0 : 0,
         isFavorite: Boolean(socialPostId && favoriteState.has(socialPostId))
-      });
+      }, { includeAttachments: false });
     });
 }
 
@@ -471,6 +470,41 @@ async function loadFavoriteRows(postIds: number[]) {
   return (data ?? []) as ResonanceFavoriteRow[];
 }
 
+async function loadViewerFavoriteRows(postIds: number[], viewerUserId?: number | null) {
+  if (!viewerUserId || postIds.length === 0) {
+    return [] as Array<{ postid: number | null }>;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('userfavorites')
+    .select('postid')
+    .in('postid', postIds)
+    .eq('userid', viewerUserId);
+
+  if (error) {
+    throw new Error(`Failed to load viewer resonance favorites: ${error.message}`);
+  }
+
+  return (data ?? []) as Array<{ postid: number | null }>;
+}
+
+async function loadCommentCountRows(postIds: number[]) {
+  if (postIds.length === 0) {
+    return [] as Array<{ postid: number | null }>;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('postcomments')
+    .select('postid')
+    .in('postid', postIds);
+
+  if (error) {
+    throw new Error(`Failed to load resonance comment counts: ${error.message}`);
+  }
+
+  return (data ?? []) as Array<{ postid: number | null }>;
+}
+
 async function loadCommentRows(postIds: number[]) {
   if (postIds.length === 0) {
     return [] as ResonanceCommentRow[];
@@ -641,7 +675,8 @@ function mapResonancePost(
   row: ResonancePostRow,
   author: UserRow | undefined,
   meta: ResonanceMeta | undefined,
-  extras: ResonancePostExtras
+  extras: ResonancePostExtras,
+  options: { includeAttachments?: boolean } = {}
 ): ResonancePost {
   return {
     id: row.postid,
@@ -655,7 +690,7 @@ function mapResonancePost(
     userId: row.userid ?? undefined,
     authorName: resolveUserName(author, row.userid),
     visibility: meta?.visibility ?? 'public',
-    attachments: mapAttachments(meta?.attachments),
+    attachments: options.includeAttachments === false ? [] : mapAttachments(meta?.attachments),
     commentCount: extras.commentCount,
     favoriteCount: extras.favoriteCount,
     isFavorite: extras.isFavorite,
@@ -669,14 +704,14 @@ function mapAttachments(rows: AttachmentRow[] | null | undefined): ResonanceAtta
   }
 
   return rows
-    .filter((row) => row.fileurl)
+    .filter((row) => row.fileurl || row.thumbnailurl)
     .sort(
       (left, right) =>
         (left.sortorder ?? Number.MAX_SAFE_INTEGER) - (right.sortorder ?? Number.MAX_SAFE_INTEGER)
     )
     .map((row) => {
       const mediaType = row.mediatype === 'video' ? 'video' : 'image';
-      const originalUrl = getPublicMediaUrl(row.fileurl?.trim() || '');
+      const originalUrl = getPublicMediaUrl(row.fileurl?.trim() || row.thumbnailurl?.trim() || '');
       const thumbnailUrl = row.thumbnailurl ? getPublicMediaUrl(row.thumbnailurl.trim()) : '';
 
       return {
@@ -801,32 +836,41 @@ function normalizeVisibility(value: string | null | undefined): ResonanceVisibil
     : 'public';
 }
 
-async function loadResonanceMetaMap(resonancePostIds: number[]) {
+async function loadResonanceMetaMap(
+  resonancePostIds: number[],
+  options: { includeAttachments?: boolean } = {}
+) {
   const map = new Map<number, ResonanceMeta>();
   if (resonancePostIds.length === 0) {
     return map;
   }
 
+  const postTypes = resonancePostIds.flatMap((postId) => [
+    buildResonancePostType(postId, 'public'),
+    buildResonancePostType(postId, 'private')
+  ]);
+  const select = options.includeAttachments
+    ? GENERIC_POST_WITH_ATTACHMENTS_SELECT
+    : GENERIC_POST_META_SELECT;
   const { data, error } = await supabaseAdmin
     .from('posts')
-    .select(GENERIC_POST_SELECT)
-    .like('posttype', 'resonance:%');
+    .select(select)
+    .in('posttype', postTypes);
 
   if (error) {
     throw new Error(`Failed to load resonance post metadata: ${error.message}`);
   }
 
-  const resonanceIdSet = new Set(resonancePostIds);
-
   ((data ?? []) as GenericPostRow[]).forEach((row) => {
     const parsed = parseResonancePostType(row.posttype);
-    if (!parsed || !resonanceIdSet.has(parsed.resonancePostId)) {
+    if (!parsed) {
       return;
     }
 
     map.set(parsed.resonancePostId, {
       socialPostId: row.postid,
       visibility: parsed.visibility,
+      favoriteCount: row.favoritecount ?? 0,
       attachments: row.postattachments ?? []
     });
   });
@@ -864,6 +908,7 @@ async function ensureResonanceMetaPost(row: ResonancePostRow) {
   return {
     socialPostId,
     visibility: 'public' as ResonanceVisibility,
+    favoriteCount: 0,
     attachments: []
   };
 }
@@ -926,4 +971,3 @@ async function getNextId(table: string, column: string) {
 
   return Number.isFinite(current) ? current + 1 : 1;
 }
-

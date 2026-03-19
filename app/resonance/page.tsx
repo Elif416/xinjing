@@ -185,6 +185,7 @@ export default function ResonancePage() {
   const addressInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null);
+  const detailedPostIdsRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     const previews = selectedFiles.map((file, index) => ({
@@ -257,11 +258,19 @@ export default function ResonancePage() {
     setSelectedPost(post);
   }, []);
 
+  const handleCloseLocationModal = useCallback(() => {
+    setSelectedLocation(null);
+  }, []);
+
+  const handleClosePostModal = useCallback(() => {
+    setSelectedPost(null);
+  }, []);
+
   const loadPosts = useCallback(async () => {
     setLoadingPosts(true);
     setLoadError('');
     try {
-      const response = await fetch('/api/resonance/posts', { cache: 'no-store' });
+      const response = await fetch('/api/resonance/posts');
       const payload = (await response.json()) as { items?: ResonancePost[]; error?: string };
       if (!response.ok) throw new Error(payload.error || '共鸣地图数据加载失败');
       setPosts(sortPostsByTime(payload.items ?? []));
@@ -276,9 +285,10 @@ export default function ResonancePage() {
     setDetailLoading(true);
     setDetailError('');
     try {
-      const response = await fetch(`/api/resonance/posts/${postId}`, { cache: 'no-store' });
+      const response = await fetch(`/api/resonance/posts/${postId}`);
       const payload = (await response.json()) as ResonancePost & { error?: string };
       if (!response.ok) throw new Error(payload.error || '贴文详情加载失败');
+      detailedPostIdsRef.current.add(postId);
       mergePost(payload);
     } catch (error) {
       setDetailError(error instanceof Error ? error.message : '贴文详情加载失败');
@@ -297,16 +307,46 @@ export default function ResonancePage() {
       return;
     }
     setCommentInput('');
+    if (detailedPostIdsRef.current.has(selectedPostId)) {
+      setDetailError('');
+      return;
+    }
     void loadPostDetail(selectedPostId);
   }, [selectedPostId, loadPostDetail]);
+
+  const searchablePosts = useMemo(
+    () =>
+      posts.map((post) => ({
+        post,
+        haystack: [
+          post.title,
+          post.content,
+          post.address,
+          post.township,
+          post.authorName,
+          post.visibility === 'private' ? '私密 private' : '公开 public'
+        ]
+          .join(' ')
+          .toLowerCase()
+      })),
+    [posts]
+  );
 
   const filteredPosts = useMemo(() => {
     const trimmed = deferredQuery.trim().toLowerCase();
     if (!trimmed) return posts;
-    return posts.filter((post) => [post.title, post.content, post.address, post.township, post.authorName, post.visibility === 'private' ? '私密 private' : '公开 public'].join(' ').toLowerCase().includes(trimmed));
-  }, [deferredQuery, posts]);
+    return searchablePosts
+      .filter((entry) => entry.haystack.includes(trimmed))
+      .map((entry) => entry.post);
+  }, [deferredQuery, posts, searchablePosts]);
 
-  const modalTransition: Transition = shouldReduceMotion ? { duration: 0 } : { type: 'spring', damping: 26, stiffness: 240 };
+  const modalTransition: Transition = useMemo(
+    () =>
+      shouldReduceMotion
+        ? { duration: 0 }
+        : { type: 'spring', damping: 26, stiffness: 240 },
+    [shouldReduceMotion]
+  );
   const focus = useMemo(
     () => (geoResult ? { lng: geoResult.lng, lat: geoResult.lat, label: geoResult.label } : null),
     [geoResult?.label, geoResult?.lat, geoResult?.lng]
@@ -322,9 +362,7 @@ export default function ResonancePage() {
             post.visibility,
             post.title,
             post.address,
-            post.createdAt,
-            post.commentCount,
-            post.favoriteCount
+            post.createdAt
           ].join('|')
         )
         .join('~'),
@@ -385,7 +423,7 @@ export default function ResonancePage() {
     }
   };
 
-  const handleSubmitComment = async () => {
+  const handleSubmitComment = useCallback(async () => {
     if (!selectedPost) return;
     if (!commentInput.trim()) return setDetailError('请输入评论内容。');
     setCommentPending(true);
@@ -401,9 +439,9 @@ export default function ResonancePage() {
     } finally {
       setCommentPending(false);
     }
-  };
+  }, [commentInput, mergePost, selectedPost]);
 
-  const handleToggleFavorite = async () => {
+  const handleToggleFavorite = useCallback(async () => {
     if (!selectedPost) return;
     setFavoritePending(true);
     setDetailError('');
@@ -417,7 +455,7 @@ export default function ResonancePage() {
     } finally {
       setFavoritePending(false);
     }
-  };
+  }, [selectedPost, updateFavoriteState]);
 
   return (
     <div className="min-h-screen bg-[#030612] text-slate-100">
@@ -492,7 +530,7 @@ export default function ResonancePage() {
           posts={selectedLocation?.posts ?? []}
           transition={modalTransition}
           formatDisplayTime={formatDisplayTime}
-          onClose={() => setSelectedLocation(null)}
+          onClose={handleCloseLocationModal}
           onSelectPost={handleSelectPostFromLocation}
         />
         <ResonancePostModal
@@ -503,7 +541,7 @@ export default function ResonancePage() {
           commentPending={commentPending}
           commentInput={commentInput}
           transition={modalTransition}
-          onClose={() => setSelectedPost(null)}
+          onClose={handleClosePostModal}
           onToggleFavorite={handleToggleFavorite}
           onCommentChange={setCommentInput}
           onSubmitComment={handleSubmitComment}

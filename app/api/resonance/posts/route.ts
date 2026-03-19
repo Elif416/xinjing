@@ -5,19 +5,34 @@ import { applyResonanceViewerCookie, getResonanceViewerContext } from '@/lib/res
 import type { ResonancePostInput } from '@/lib/resonanceTypes';
 
 export const dynamic = 'force-dynamic';
+export const preferredRegion = 'hnd1';
+
+const CACHE_CONTROL_HEADER = 'public, s-maxage=60, stale-while-revalidate=300';
 
 export async function GET() {
   try {
     const viewer = await getResonanceViewerContext();
     const items = await listResonancePosts({ viewerUserId: viewer.userId });
-    const response = NextResponse.json({ items });
+    const response = NextResponse.json(
+      { items },
+      {
+        headers: {
+          'Cache-Control': CACHE_CONTROL_HEADER
+        }
+      }
+    );
     return applyResonanceViewerCookie(response, viewer.guestKey);
   } catch (error) {
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Failed to load resonance posts'
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Cache-Control': CACHE_CONTROL_HEADER
+        }
+      }
     );
   }
 }

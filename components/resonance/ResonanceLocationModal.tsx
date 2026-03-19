@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, type Transition } from 'framer-motion';
 import { Globe2, Lock, MapPin, MessageCircle, X } from 'lucide-react';
+import { memo } from 'react';
 
 import type { ResonancePost } from '@/lib/resonanceTypes';
 
@@ -15,7 +16,7 @@ type ResonanceLocationModalProps = {
   onSelectPost: (post: ResonancePost) => void;
 };
 
-export function ResonanceLocationModal({
+export const ResonanceLocationModal = memo(function ResonanceLocationModal({
   open,
   title,
   posts,
@@ -117,4 +118,4 @@ export function ResonanceLocationModal({
       ) : null}
     </AnimatePresence>
   );
-}
+});

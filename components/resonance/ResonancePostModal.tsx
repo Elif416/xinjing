@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, type Transition } from 'framer-motion';
 import { Film, Globe2, Heart, LoaderCircle, Lock, MessageCircle, Send, X } from 'lucide-react';
+import { memo } from 'react';
 
 import type { ResonancePost } from '@/lib/resonanceTypes';
 
@@ -20,7 +21,7 @@ type ResonancePostModalProps = {
   formatDisplayTime: (value: string) => string;
 };
 
-export function ResonancePostModal({
+export const ResonancePostModal = memo(function ResonancePostModal({
   post,
   detailLoading,
   detailError,
@@ -123,12 +124,15 @@ export function ResonancePostModal({
                               src={attachment.url}
                               controls
                               playsInline
+                              preload="metadata"
                               className="h-full min-h-52 w-full bg-black object-cover"
                             />
                           ) : (
                             <img
                               src={attachment.url}
                               alt={post.title || post.address}
+                              loading="lazy"
+                              decoding="async"
                               className="h-full min-h-52 w-full object-cover"
                             />
                           )}
@@ -242,4 +246,4 @@ export function ResonancePostModal({
       ) : null}
     </AnimatePresence>
   );
-}
+});
