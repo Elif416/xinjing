@@ -6,19 +6,19 @@
   },
   "nav": [
     {
-      "label": "心境 绘",
+      "label": "心镜 绘",
       "href": "#creation"
     },
     {
-      "label": "心境 伴",
+      "label": "心镜 伴",
       "href": "/activation"
     },
     {
-      "label": "心境 镜",
+      "label": "心镜 镜",
       "href": "#resonance"
     },
     {
-      "label": "心境 物",
+      "label": "心镜 物",
       "href": "#workshop"
     },
     {
@@ -29,7 +29,7 @@
   "hero": {
     "title": "心镜：数字情感记忆共创平台",
     "subtitle": "从个性化创造，到智能体活化，再到跨越时空的共鸣。让每一份细腻的情感都被看见、被珍藏、被连接。",
-    "primaryCta": "开启心境",
+    "primaryCta": "开启心镜",
     "secondaryCta": "探索闭环"
   },
   "bento": {

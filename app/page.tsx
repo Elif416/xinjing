@@ -29,7 +29,7 @@ export default function Home() {
   const hero = homeData.hero ?? {
     title: '心镜：数字情感记忆共创平台',
     subtitle: '',
-    primaryCta: '开启心境',
+    primaryCta: '开启心镜',
     secondaryCta: '探索闭环'
   };
   const bento = homeData.bento ?? { title: '', items: [] };
