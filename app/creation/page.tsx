@@ -139,7 +139,9 @@ export default function CreationPage() {
       }
 
       try {
-        const response = await fetch(`/api/artists?${buildArtistsQuery(offset)}`);
+        const response = await fetch(`/api/artists?${buildArtistsQuery(offset)}`, {
+          cache: 'no-store'
+        });
 
         if (!response.ok) {
           throw new Error('画师数据加载失败');

@@ -5,7 +5,7 @@ import { getArtistsPage } from '@/lib/artistRepository';
 export const dynamic = 'force-dynamic';
 export const preferredRegion = 'hnd1';
 
-const CACHE_CONTROL_HEADER = 'public, s-maxage=300, stale-while-revalidate=3600';
+const CACHE_CONTROL_HEADER = 'no-store, max-age=0';
 
 export async function GET(request: NextRequest) {
   try {
