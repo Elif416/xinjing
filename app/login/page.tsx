@@ -87,7 +87,7 @@ function LoginContent() {
 
       setCode('');
       setCodeSent(true);
-      setNotice('验证邮件已发送，请查看邮箱。可输入 6 位验证码，也可以点击邮件确认链接完成注册。');
+      setNotice('验证码已发送，请查看邮箱并输入 6 位验证码完成注册。');
     } catch {
       setError('验证码发送失败，请检查网络后重试。');
     } finally {
