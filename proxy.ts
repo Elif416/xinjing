@@ -4,9 +4,11 @@ import { verifyAuthToken } from './lib/authToken';
 
 const PUBLIC_PATHS = [
   '/login',
+  '/auth/callback',
   '/api/auth/login',
   '/api/auth/request-code',
-  '/api/auth/verify-code'
+  '/api/auth/verify-code',
+  '/api/auth/session'
 ];
 
 function isPublicPath(pathname: string) {
