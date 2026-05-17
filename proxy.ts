@@ -2,7 +2,12 @@
 import type { NextRequest } from 'next/server';
 import { verifyAuthToken } from './lib/authToken';
 
-const PUBLIC_PATHS = ['/login', '/api/auth/login'];
+const PUBLIC_PATHS = [
+  '/login',
+  '/api/auth/login',
+  '/api/auth/request-code',
+  '/api/auth/verify-code'
+];
 
 function isPublicPath(pathname: string) {
   if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {

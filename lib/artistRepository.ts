@@ -61,14 +61,7 @@ type ArtistQueryOptions = {
 };
 
 const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? 'pixiv-images';
-const SUPABASE_PUBLIC_URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? '';
 const DEFAULT_ARTIST_IMAGE = '/mock-dream.svg';
-const ARTIST_GRID_THUMBNAIL = {
-  width: 640,
-  height: 640,
-  quality: 70,
-  resize: 'cover' as const
-};
 const PORTFOLIO_SIZE_PATTERN: ArtistPortfolioItem['size'][] = [
   'large',
   'wide',
@@ -316,7 +309,7 @@ function getAttachmentThumbnailPublicUrl(attachment: AttachmentRecord | null | u
 
   const originalPath = normalizeStoragePath(attachment?.fileurl);
 
-  return originalPath ? getTransformedImageUrl(originalPath, ARTIST_GRID_THUMBNAIL) : '';
+  return originalPath ? getPublicImageUrl(originalPath) : '';
 }
 
 function getAttachmentOriginalPublicUrl(attachment: AttachmentRecord | null | undefined) {
@@ -433,41 +426,30 @@ function getPublicImageUrl(fileUrl: string) {
   return supabaseAdmin.storage.from(STORAGE_BUCKET).getPublicUrl(fileUrl).data.publicUrl;
 }
 
-function getTransformedImageUrl(
-  fileUrl: string,
-  options: { width: number; height?: number; quality?: number; resize?: 'cover' | 'contain' | 'fill' }
-) {
-  if (!SUPABASE_PUBLIC_URL || /^https?:\/\//i.test(fileUrl)) {
-    return getPublicImageUrl(fileUrl);
-  }
-
-  const url = new URL(
-    `/storage/v1/render/image/public/${STORAGE_BUCKET}/${fileUrl}`,
-    SUPABASE_PUBLIC_URL
-  );
-
-  url.searchParams.set('width', String(options.width));
-
-  if (options.height) {
-    url.searchParams.set('height', String(options.height));
-  }
-
-  if (options.quality) {
-    url.searchParams.set('quality', String(options.quality));
-  }
-
-  if (options.resize) {
-    url.searchParams.set('resize', options.resize);
-  }
-
-  return url.toString();
-}
-
 function normalizeStoragePath(value: string | null | undefined) {
   const normalized = value?.trim() ?? '';
 
   if (!normalized) {
     return '';
+  }
+
+  if (/^https?:\/\//i.test(normalized)) {
+    try {
+      const url = new URL(normalized);
+      const objectPrefix = `/storage/v1/object/public/${STORAGE_BUCKET}/`;
+      const renderPrefix = `/storage/v1/render/image/public/${STORAGE_BUCKET}/`;
+      const pathname = decodeURIComponent(url.pathname);
+
+      if (pathname.startsWith(objectPrefix)) {
+        return pathname.slice(objectPrefix.length);
+      }
+
+      if (pathname.startsWith(renderPrefix)) {
+        return pathname.slice(renderPrefix.length);
+      }
+    } catch {}
+
+    return normalized;
   }
 
   return normalized.replace(/^\/+/, '');

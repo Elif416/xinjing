@@ -25,6 +25,7 @@ export type ArtistCardProps = {
 // 复用 GlassCard 玻璃样式，保证与首页风格一致
 export function ArtistCard({ artist, onOpen, imagePriority = false }: ArtistCardProps) {
   const avatarText = artist.avatar ?? artist.name.slice(0, 1);
+  const bypassImageOptimizer = /^https?:\/\//i.test(artist.image);
 
   const handleOpen = () => {
     onOpen?.(artist);
@@ -51,6 +52,7 @@ export function ArtistCard({ artist, onOpen, imagePriority = false }: ArtistCard
           fill
           priority={imagePriority}
           quality={70}
+          unoptimized={bypassImageOptimizer}
           sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
           className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />

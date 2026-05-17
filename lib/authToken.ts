@@ -3,6 +3,10 @@
 
 export type AuthTokenPayload = {
   email: string;
+  sub?: string;
+  userId?: number;
+  name?: string;
+  provider?: string;
   // 过期时间（时间戳，毫秒）
   exp: number;
 };

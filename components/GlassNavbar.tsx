@@ -88,6 +88,7 @@ export function GlassNavbar({
                 fill
                 sizes="40px"
                 className="object-cover"
+                unoptimized
                 priority
               />
             </div>
